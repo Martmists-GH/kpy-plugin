@@ -1,0 +1,46 @@
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+
+buildscript {
+    extra["kotlin_plugin_id"] = "com.martmists.kpy-plugin"
+}
+
+plugins {
+    kotlin("multiplatform") version "1.6.20" apply false
+    kotlin("jvm") version "1.6.20" apply false
+
+    id("com.google.devtools.ksp") version "1.6.20-1.0.5" apply false
+    id("com.gradle.plugin-publish") version "0.21.0" apply false
+    id("com.github.gmazzo.buildconfig") version "3.0.3" apply false
+
+    id("com.github.ben-manes.versions") version "0.42.0"
+    id("se.patrikerdes.use-latest-versions") version "0.2.18"
+}
+
+allprojects {
+    group = "com.martmists"
+    version = "0.0.1"
+
+    tasks.withType<DependencyUpdatesTask> {
+        fun isNonStable(version: String): Boolean {
+            val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.toUpperCase().contains(it) }
+            val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+            val isStable = stableKeyword || regex.matches(version)
+            return isStable.not()
+        }
+
+        rejectVersionIf {
+            isNonStable(candidate.version) && !isNonStable(currentVersion)
+        }
+    }
+}
+
+subprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    apply(plugin = "com.github.gmazzo.buildconfig")
+
+    buildDir = File(rootProject.buildDir.absolutePath + "/" + project.name)
+}
