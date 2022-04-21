@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
     kotlin("multiplatform")
+    `maven-publish`
 }
 
 kotlin {
@@ -89,4 +90,42 @@ with open("${cinteropDir}/python.def", "w") as fp:
 
 val cinteropPythonNative by tasks.getting {
     dependsOn(generatePythonDef)
+}
+
+if (project.ext.has("mavenToken")) {
+    publishing {
+        repositories {
+            maven {
+                name = "Host"
+                url = uri("https://maven.martmists.com/releases")
+                credentials {
+                    username = "admin"
+                    password = project.ext["mavenToken"]!! as String
+                }
+            }
+        }
+
+        publications.withType<MavenPublication> {
+
+        }
+    }
+} else if (System.getenv("CI") == "true") {
+    publishing {
+        repositories {
+            maven {
+                name = "Host"
+                url = uri(System.getenv("GITHUB_TARGET_REPO")!!)
+                credentials {
+                    username = "github-actions"
+                    password = System.getenv("DEPLOY_KEY")!!
+                }
+            }
+        }
+
+        publications.withType<MavenPublication> {
+            if (System.getenv("DEPLOY_TYPE") == "snapshot") {
+                version = System.getenv("GITHUB_SHA")!!
+            }
+        }
+    }
 }

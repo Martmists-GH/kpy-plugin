@@ -7,6 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.repositories
 import org.gradle.kotlin.dsl.task
 import org.gradle.kotlin.dsl.the
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
@@ -32,7 +33,7 @@ class KPyPlugin : Plugin<Project> {
 
             // KPy Library
             it.dependencies {
-                implementation("com.martmists:kpy-library:${BuildConfig.VERSION}")
+                implementation("com.martmists.kpy:kpy-library:${BuildConfig.VERSION}")
             }
         }
     }
@@ -47,9 +48,16 @@ class KPyPlugin : Plugin<Project> {
 
     context(Project)
     fun setupDependencies() {
+        repositories {
+            maven {
+                it.name = "KPy Repository"
+                it.setUrl("https://maven.martmists.com/releases/")
+            }
+        }
+
         dependencies.apply {
             // Setup KSP processor
-            add("kspNative", "com.martmists:kpy-processor:${BuildConfig.VERSION}")
+            add("kspNative", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}")
         }
     }
 

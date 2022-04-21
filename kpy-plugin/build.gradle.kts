@@ -14,10 +14,24 @@ dependencies {
     implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.6.20-1.0.5")
 }
 
+pluginBundle {
+    website = "https://github.com/martmists-gh/kpy-plugin"
+    vcsUrl = "https://github.com/martmists-gh/kpy-plugin"
+    description = "KPy Plugin is a plugin to target the Python C API from Kotlin/Native."
+    tags = listOf(
+        "kotlin", "multiplatform", "native", "python"
+    )
+
+    mavenCoordinates {
+        groupId = "com.martmists.kpy"
+        artifactId = "kpy-plugin"
+    }
+}
+
 gradlePlugin {
     plugins {
         create("kpy") {
-            id = "com.martmists.kpy-plugin"
+            id = "com.martmists.kpy.kpy-plugin"
             displayName = "KPy Plugin"
             implementationClass = "com.martmists.kpy.plugin.KPyPlugin"
         }

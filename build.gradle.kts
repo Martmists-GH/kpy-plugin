@@ -17,7 +17,7 @@ plugins {
 }
 
 allprojects {
-    group = "com.martmists"
+    group = "com.martmists.kpy"
     version = "0.0.1"
 
     tasks.withType<DependencyUpdatesTask> {
