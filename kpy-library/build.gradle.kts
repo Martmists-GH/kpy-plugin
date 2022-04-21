@@ -8,28 +8,57 @@ plugins {
 kotlin {
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
+
     val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
-        isMingwX64 -> mingwX64("native")
+        hostOs == "Mac OS X" -> macosX64()
+        hostOs == "Linux" -> linuxX64()
+        isMingwX64 -> mingwX64()
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
+    sourceSets {
+        val nativeMain by creating {
+
+        }
+
+        try {
+            val linuxX64Main by getting {
+                dependsOn(nativeMain)
+            }
+        } catch (e: Exception) {
+            println("LinuxX64Main not found")
+        }
+
+        try {
+            val mingwX64Main by getting {
+                dependsOn(nativeMain)
+            }
+        } catch (e: Exception) {
+            println("MingwX64Main not found")
+        }
+
+        try {
+            val macosX64Main by getting {
+                dependsOn(nativeMain)
+            }
+        } catch (e: Exception) {
+            println("MacosX64Main not found")
+        }
+    }
+
     nativeTarget.apply {
-        val main by compilations.getting
-        val python by main.cinterops.creating { }
+        val main by compilations.getting {
+
+        }
+        val python by main.cinterops.creating {
+
+        }
 
         binaries {
             staticLib {
                 binaryOptions["memoryModel"] = "experimental"
+                freeCompilerArgs += listOf("-Xgc=cms")
             }
-        }
-    }
-
-    targets.withType<KotlinNativeTarget> {
-        binaries.all {
-            binaryOptions["memoryModel"] = "experimental"
-            freeCompilerArgs += listOf("-Xgc=cms")
         }
     }
 }
@@ -88,8 +117,14 @@ with open("${cinteropDir}/python.def", "w") as fp:
     outputs.upToDateWhen { false }
 }
 
-val cinteropPythonNative by tasks.getting {
-    dependsOn(generatePythonDef)
+for (target in listOf("Linux", "Macos", "Mingw")) {
+    try {
+        tasks.getByName("cinteropPython${target}X64") {
+            dependsOn(generatePythonDef)
+        }
+    } catch (e: Exception) {
+        println("cinteropPython${target}X64 not found")
+    }
 }
 
 if (project.ext.has("mavenToken")) {

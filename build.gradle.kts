@@ -16,9 +16,13 @@ plugins {
     id("se.patrikerdes.use-latest-versions") version "0.2.18"
 }
 
+repositories {
+    mavenCentral()
+}
+
 allprojects {
     group = "com.martmists.kpy"
-    version = "0.1.0"
+    version = "0.1.1"
 
     tasks.withType<DependencyUpdatesTask> {
         fun isNonStable(version: String): Boolean {
