@@ -116,7 +116,7 @@ if (project.ext.has("mavenToken")) {
                 name = "Host"
                 url = uri(System.getenv("GITHUB_TARGET_REPO")!!)
                 credentials {
-                    username = "github-actions"
+                    username = "kpy-actions"
                     password = System.getenv("DEPLOY_KEY")!!
                 }
             }
