@@ -106,11 +106,11 @@ char* PyUnicode_AsString(PyObject* obj) {{
     return _PyUnicode_AsString(obj);
 }}
 '''.strip()
-with open("${cinteropDir.replace('\\', '/')}/python.def", "w") as fp:
+with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
     fp.write(template.format(
-        INCLUDE_DIR=paths["platinclude"],
+        INCLUDE_DIR=paths['platinclude'],
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
-        MIN_VERSION_HEX="0x${versionHex}"
+        MIN_VERSION_HEX='0x${versionHex}'
     ))
         """.trim()
     )
