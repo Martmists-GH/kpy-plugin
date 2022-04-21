@@ -117,3 +117,7 @@ gradle-app.setting
 .idea/sonarlint/
 .idea/discord.xml
 .idea/markdown.xml
+
+### Project
+*.def
+*.egg-info/

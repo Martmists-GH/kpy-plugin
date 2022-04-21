@@ -11,30 +11,38 @@ import com.martmists.kpy.processor.collected.KPyClass
 import com.martmists.kpy.processor.collected.KPyFunction
 
 @AutoService(SymbolProcessor::class)
-class KPySymbolProcessor(val codeGenerator: CodeGenerator) : SymbolProcessor {
+class KPySymbolProcessor(private val projectName: String, private val codeGenerator: CodeGenerator) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val modules = KPyModuleCache()
 
-        resolver.getSymbolsWithAnnotation("kpy.annotations.PyExport").forEach {
+        resolver.getSymbolsWithAnnotation("kpy.annotations.PyExport", inDepth = false).forEach {
             when (it) {
                 is KSClassDeclaration -> {
                     val module = modules[it.packageName.asString()]
-
                     module.classes.add(it.asKPy())
                 }
 
                 is KSFunctionDeclaration -> {
-                    val module = modules[it.packageName.asString()]
-
-                    module.functions.add(it.asKPy())
+                    // class members are still included here, filter them out
+                    if (it.parentDeclaration == null) {
+                        val module = modules[it.packageName.asString()]
+                        module.functions.add(it.asKPy())
+                    }
                 }
             }
         }
 
-        modules.all().filter {
+        val rootModule = modules.all().filter {
             it.isRoot()
-        }.forEach {
-            // Handle children first to add as properties
+        }.also {
+            if (it.size > 1) {
+                throw IllegalStateException("Expected exactly one root module, but found ${it.size}")
+            }
+        }.firstOrNull() ?: return emptyList()
+
+        val gen = KPyCodeGenerator(projectName)
+        with(codeGenerator) {
+            gen.generate(rootModule)
         }
 
         return emptyList()
@@ -47,10 +55,18 @@ class KPySymbolProcessor(val codeGenerator: CodeGenerator) : SymbolProcessor {
             }
         }
 
+        val parent = this.parentDeclaration?.let {
+            val isExport = it.annotations.any {
+                it.shortName.asString() == "PyExport"
+            }
+            (it as KSClassDeclaration).asKPy()
+        }
+
         return KPyClass(
             simpleName.asString(),
-            getExportName() ?: simpleName.asString(),
+            getExportName() ?: simpleName.getShortName(),
             this,
+            parent,
             funcs.map { it.asKPy() }.toMutableList()
         )
     }
@@ -58,8 +74,9 @@ class KPySymbolProcessor(val codeGenerator: CodeGenerator) : SymbolProcessor {
     private fun KSFunctionDeclaration.asKPy() : KPyFunction {
         return KPyFunction(
             simpleName.asString(),
-            getExportName() ?: simpleName.asString(),
-            this
+            getExportName() ?: simpleName.getShortName(),
+            this,
+            false
         )
     }
 

@@ -56,17 +56,33 @@ val generatePythonDef = tasks.create<Exec>("generatePythonDef") {
     args(
         "-c",
         """
-        import sysconfig
-        paths = sysconfig.get_paths()
-        with open("${cinteropDir}/python.def.template", "r") as fp:
-            template = fp.read()   
-        with open("${cinteropDir}/python.def", "w") as fp:
-            fp.write(template.format(
-                INCLUDE_DIR=paths["platinclude"],
-                LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
-                MIN_VERSION_HEX="0x${versionHex}"
-            ))
-        """.trimIndent()
+import sysconfig
+paths = sysconfig.get_paths()
+template = '''
+headers = Python.h
+package = python
+compilerOpts = -I"{INCLUDE_DIR}"
+linkerOpts = -L"{LIB_DIR}" -l python3
+
+---
+
+struct KtPyObject {{
+    PyObject base;
+    void* ktObject;
+}};
+
+// Wrapper func for _PyUnicode_AsString macro
+char* PyUnicode_AsString(PyObject* obj) {{
+    return _PyUnicode_AsString(obj);
+}}
+'''.strip()
+with open("${cinteropDir}/python.def", "w") as fp:
+    fp.write(template.format(
+        INCLUDE_DIR=paths["platinclude"],
+        LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
+        MIN_VERSION_HEX="0x${versionHex}"
+    ))
+        """.trim()
     )
     outputs.upToDateWhen { false }
 }

@@ -10,7 +10,7 @@ val PyType_GenericAllocKt = staticCFunction { arg0: CPointer<PyTypeObject>?, arg
 }
 
 val PyType_GenericNewKt = staticCFunction { arg0: CPointer<PyTypeObject>?, arg1: CPointer<PyObject>?, arg2: CPointer<PyObject>? ->
-    return@staticCFunction PyType_GenericNew(arg0, arg1, arg1)
+    return@staticCFunction PyType_GenericNew(arg0, arg1, arg2)
 }
 
 

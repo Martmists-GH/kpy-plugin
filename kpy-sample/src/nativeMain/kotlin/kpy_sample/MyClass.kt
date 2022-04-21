@@ -1,4 +1,4 @@
-package mymodule
+package kpy_sample
 
 import kpy.annotations.PyExport
 
@@ -12,4 +12,9 @@ class MyClass {
     fun hidden() {
         println("This is hidden!")
     }
+}
+
+@PyExport
+fun testFunction(x: Int) : Int {
+    return x shr 1
 }

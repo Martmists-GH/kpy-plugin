@@ -30,6 +30,26 @@ kotlin {
             }
         }
     }
+
+    sourceSets.named("nativeMain") {
+        kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/native/nativeMain/kotlin")
+    }
+}
+
+val setupMetadata by tasks.creating {
+    actions.add {
+        println("""
+            |===METADATA START===
+            |project_name = "${project.name}"
+            |project_version = "${project.version}"
+            |build_dir = "${buildDir.absolutePath}"
+            |===METADATA END===
+        """.trimMargin())
+    }
+}
+
+ksp {
+    arg("projectName", project.name)
 }
 
 dependencies {

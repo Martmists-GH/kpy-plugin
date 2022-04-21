@@ -7,6 +7,6 @@ import com.google.devtools.ksp.processing.SymbolProcessorProvider
 @AutoService(SymbolProcessorProvider::class)
 class KPySymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): KPySymbolProcessor {
-        return KPySymbolProcessor(environment.codeGenerator)
+        return KPySymbolProcessor(environment.options["projectName"]!!, environment.codeGenerator)
     }
 }

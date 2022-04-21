@@ -4,15 +4,15 @@ import kotlinx.cinterop.*
 import kpy.wrappers.PyObjectT
 import python.*
 
-internal val CPointer<PyObject>.kt
+val CPointer<PyObject>.kt
     get(): CPointer<KtPyObject> = reinterpret()
 
-internal inline fun <reified T : Any> CPointer<KtPyObject>.cast(): T {
+inline fun <reified T : Any> CPointer<KtPyObject>.cast(): T {
     val ref = this.pointed.ktObject!!.asStableRef<T>()
     return ref.get()
 }
 
-internal inline fun PyObjectT.addType(type: PyTypeObject): Int {
+inline fun PyObjectT.addType(type: PyTypeObject): Int {
     var status = PyType_Ready(type.ptr)
     if (status < 0) {
         PyErr_Print()

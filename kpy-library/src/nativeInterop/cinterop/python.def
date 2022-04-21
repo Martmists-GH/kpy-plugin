@@ -1,7 +1,7 @@
 headers = Python.h
 package = python
-compilerOpts = -I"/usr/include/python3.10"
-linkerOpts = -L"/usr/lib" -l python3
+compilerOpts = -I"/home/mart/.pyenv/versions/3.9.7/include/python3.9"
+linkerOpts = -L"/home/mart/.pyenv/versions/3.9.7/lib" -l python3
 
 ---
 
