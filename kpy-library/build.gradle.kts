@@ -106,7 +106,7 @@ char* PyUnicode_AsString(PyObject* obj) {{
     return _PyUnicode_AsString(obj);
 }}
 '''.strip()
-with open("${cinteropDir}/python.def", "w") as fp:
+with open("${cinteropDir.replace('\\', '/')}/python.def", "w") as fp:
     fp.write(template.format(
         INCLUDE_DIR=paths["platinclude"],
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),

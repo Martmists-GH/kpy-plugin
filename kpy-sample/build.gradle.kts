@@ -42,7 +42,7 @@ val setupMetadata by tasks.creating {
             |===METADATA START===
             |project_name = "${project.name}"
             |project_version = "${project.version}"
-            |build_dir = "${buildDir.absolutePath}"
+            |build_dir = "${buildDir.absolutePath.replace('\\', '/')}"
             |===METADATA END===
         """.trimMargin())
     }
