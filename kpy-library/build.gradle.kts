@@ -113,11 +113,6 @@ with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
     ))
-    print(template.format(
-        INCLUDE_DIR=paths['platinclude'],
-        LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
-        MIN_VERSION_HEX='0x${versionHex}'
-    ))
 with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') as fp:
     fp.write(template.format(
         INCLUDE_DIR="mingw64/include/python${pyVersion}",
