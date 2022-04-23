@@ -107,8 +107,6 @@ char* PyUnicode_AsString(PyObject* obj) {{
 }}
 '''.strip()
 
-os.mkdirs('${cinteropDir.replace('\\', '/')}/python-{versionHex}')
-
 with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
     fp.write(template.format(
         INCLUDE_DIR=paths['platinclude'],
