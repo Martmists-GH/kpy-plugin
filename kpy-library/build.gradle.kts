@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
     kotlin("multiplatform")
@@ -6,14 +6,19 @@ plugins {
 }
 
 kotlin {
+    val targets = listOf(
+        linuxX64(),
+        mingwX64(),
+        macosX64(),
+    )
+
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
-
-    val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64()
-        hostOs == "Linux" -> linuxX64()
-        isMingwX64 -> mingwX64()
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
+    val hostTarget = when {
+        hostOs == "Mac OS X" -> KonanTarget.MACOS_X64
+        hostOs == "Linux" -> KonanTarget.LINUX_X64
+        isMingwX64 -> KonanTarget.MINGW_X64
+        else -> error("Unsupported host OS: $hostOs")
     }
 
     sourceSets {
@@ -21,47 +26,42 @@ kotlin {
 
         }
 
-        try {
-            val linuxX64Main by getting {
-                dependsOn(nativeMain)
-            }
-        } catch (e: Exception) {
-            println("LinuxX64Main not found")
+        val linuxX64Main by getting {
+            dependsOn(nativeMain)
         }
 
-        try {
-            val mingwX64Main by getting {
-                dependsOn(nativeMain)
-            }
-        } catch (e: Exception) {
-            println("MingwX64Main not found")
+        val mingwX64Main by getting {
+            dependsOn(nativeMain)
         }
 
-        try {
-            val macosX64Main by getting {
-                dependsOn(nativeMain)
-            }
-        } catch (e: Exception) {
-            println("MacosX64Main not found")
+        val macosX64Main by getting {
+            dependsOn(nativeMain)
         }
     }
 
-    nativeTarget.apply {
-        val main by compilations.getting {
+    targets.forEach {
+        it.apply {
+            val main by compilations.getting {
 
-        }
-        val python by main.cinterops.creating {
+            }
+            val python by main.cinterops.creating {
+                if (konanTarget != hostTarget && konanTarget == KonanTarget.MINGW_X64) {
+                    defFile = project.file("src/nativeInterop/cinterop/python-github-MingwX64.def")
+                }
+            }
 
-        }
-
-        binaries {
-            staticLib {
-                binaryOptions["memoryModel"] = "experimental"
-                freeCompilerArgs += listOf("-Xgc=cms")
+            binaries {
+                staticLib {
+                    binaryOptions["memoryModel"] = "experimental"
+                    freeCompilerArgs += listOf("-Xgc=cms")
+                }
             }
         }
     }
 }
+
+val pyVersion = findProperty("pythonVersion") as String? ?: "3.9"
+version = "$version+$pyVersion"
 
 buildConfig {
     packageName.set("com.martmists.kpy.cfg")
@@ -70,7 +70,7 @@ buildConfig {
 }
 
 val generatePythonDef = tasks.create<Exec>("generatePythonDef") {
-    val minPyVersion = "3.9.0"
+    val minPyVersion = pyVersion
 
     group = "interop"
     description = "Generate Python.def file"
@@ -112,18 +112,24 @@ with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
     ))
+with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') as fp:
+    fp.write(template.format(
+        INCLUDE_DIR="/mingw64/include/python${pyVersion}",
+        LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
+        MIN_VERSION_HEX='0x${versionHex}'
+    ))
         """.trim()
     )
     outputs.upToDateWhen { false }
 }
 
-for (target in listOf("Linux", "Macos", "Mingw")) {
+for (target in listOf("LinuxX64", "MacosX64", "MingwX64")) {
     try {
-        tasks.getByName("cinteropPython${target}X64") {
+        tasks.getByName("cinteropPython${target}") {
             dependsOn(generatePythonDef)
         }
     } catch (e: Exception) {
-        println("cinteropPython${target}X64 not found")
+        println("Skipping cinteropPython${target} as it's not available on this OS")
     }
 }
 

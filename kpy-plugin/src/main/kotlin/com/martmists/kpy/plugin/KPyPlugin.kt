@@ -15,11 +15,11 @@ import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 class KPyPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
+            setupExtensions()
             setupSourceSets()
             setupPlugins()
             setupDependencies()
             setupTasks()
-            setupExtensions()
         }
     }
 
@@ -57,7 +57,8 @@ class KPyPlugin : Plugin<Project> {
 
         dependencies.apply {
             // Setup KSP processor
-            add("kspNative", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}")
+            val extension = extensions.getByType(KPyExtension::class.java)
+            add("kspNative", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}+${extension.pyVersion}")
         }
     }
 

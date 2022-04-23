@@ -87,12 +87,12 @@ fun <T> T.toPython() : PyObjectT {
     return when (this) {
         null -> Py_None
         is Unit -> Py_None
-        is Int -> PyLong_FromLong(this.toLong())
-        is Long -> PyLong_FromLong(this)
+        is Int -> PyLong_FromLong(this.convert())
+        is Long -> PyLong_FromLong(this.convert())
         is Float -> PyFloat_FromDouble(this.toDouble())
         is Double -> PyFloat_FromDouble(this)
         is String -> PyUnicode_FromString(this)
-        is Boolean -> PyBool_FromLong(if (this) 1 else 0)
+        is Boolean -> PyBool_FromLong((if (this) 1 else 0).convert())
         is FloatArray -> {
             val list = PyList_New(this.size.convert())
             for (i in 0 until this.size) {
