@@ -38,7 +38,7 @@ jobs:
               name: Download msys2 python headers
               run: |
                   brew install grep
-                  wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | grep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
+                  wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | ggrep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
                   tar --use-compress-program=unzstd -xvf pkg.tar.zst
               working-directory: kpy-library
 
