@@ -21,6 +21,7 @@ inline fun FuncPtr<PyMethodT>.pydef(
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 inline fun FuncPtr<PyMethodKwargsT>.pydef(
     name: String,
     doc: String,

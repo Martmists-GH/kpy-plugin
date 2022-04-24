@@ -11,7 +11,7 @@ import kotlin.reflect.typeOf
 
 inline fun <reified R : Any> PyObjectT.toKotlin() : R = toKotlin(typeOf<R>())
 
-@Suppress("IMPLICIT_CAST_TO_ANY")
+@Suppress("IMPLICIT_CAST_TO_ANY", "UNCHECKED_CAST")
 fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
     val clazz = type?.classifier
 
@@ -83,6 +83,7 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
     } as R
 }
 
+@Suppress("UNNECESSARY_NOT_NULL_ASSERTION")  // False positive
 fun <T> T.toPython() : PyObjectT {
     return when (this) {
         null -> Py_None

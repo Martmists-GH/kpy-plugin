@@ -12,4 +12,7 @@ PYTHON_VERSION="3.9"
 wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python$PYTHON_VERSION?repo=mingw64" | grep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
 tar --use-compress-program=unzstd -xvf pkg.tar.zst
 rm pkg.tar.zst .BUILDINFO .MTREE .PKGINFO
+
+# Then run gradle build with the same version:
+gradle -PpythonVersion=$PYTHON_VERSION build
 ```
