@@ -16,9 +16,8 @@ jobs:
     build-libraries:
         strategy:
             matrix:
-                host: [ macos-latest ]
                 python: [ '3.9', '3.10' ]
-        runs-on: ${{ matrix.host }}
+        runs-on: macos-latest
         steps:
             # Check out project
             - uses: actions/checkout@v2
@@ -34,10 +33,11 @@ jobs:
               with:
                   python-version: ${{ matrix.python }}
 
+            # Note: grep installs as ggrep on macos
             - shell: bash
               name: Download msys2 python headers
               run: |
-                  brew install grep
+                  brew install grep 
                   wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | ggrep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
                   tar --use-compress-program=unzstd -xvf pkg.tar.zst
               working-directory: kpy-library
@@ -50,10 +50,10 @@ jobs:
             - name: Build with Gradle
               uses: gradle/gradle-build-action@v2
               with:
-                  arguments: -PpythonVersion=${{ matrix.python }}  build
+                  arguments: -PpythonVersion=${{ matrix.python }} build
 
             # Publish modules
             - name: Publish to Maven
               uses: gradle/gradle-build-action@v2
               with:
-                  arguments: publish
+                  arguments: -PpythonVersion=${{ matrix.python }} publish
