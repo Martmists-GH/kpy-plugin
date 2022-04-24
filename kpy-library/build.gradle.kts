@@ -7,9 +7,14 @@ plugins {
 
 kotlin {
     val targets = listOf(
+        // X64
         linuxX64(),
         mingwX64(),
         macosX64(),
+
+        // Arm
+        linuxArm64(),
+        macosArm64(),
     )
 
     val hostOs = System.getProperty("os.name")
@@ -35,6 +40,14 @@ kotlin {
         }
 
         val macosX64Main by getting {
+            dependsOn(nativeMain)
+        }
+
+        val linuxArm64Main by getting {
+            dependsOn(nativeMain)
+        }
+
+        val macosArm64Main by getting {
             dependsOn(nativeMain)
         }
     }
@@ -124,7 +137,7 @@ with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') a
     outputs.upToDateWhen { false }
 }
 
-for (target in listOf("LinuxX64", "MacosX64", "MingwX64")) {
+for (target in listOf("LinuxX64", "MacosX64", "MingwX64", "LinuxArm64", "MacosArm64")) {
     try {
         tasks.getByName("cinteropPython${target}") {
             dependsOn(generatePythonDef)
