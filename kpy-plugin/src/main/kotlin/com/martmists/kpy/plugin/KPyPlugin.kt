@@ -27,13 +27,17 @@ class KPyPlugin : Plugin<Project> {
     fun setupSourceSets() {
         kotlinExtension.sourceSets.filter {
             it.name == "nativeMain"
-        }.forEach {
+        }.forEach { sourceSet ->
             // KSP generated source code
-            it.kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/native/nativeMain/kotlin")
+            sourceSet.kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/native/nativeMain/kotlin")
 
-            // KPy Library
-            it.dependencies {
-                implementation("com.martmists.kpy:kpy-library:${BuildConfig.VERSION}")
+            afterEvaluate {
+                val extension = extensions.getByType(KPyExtension::class.java)
+
+                // KPy Library
+                sourceSet.dependencies {
+                    implementation("com.martmists.kpy:kpy-library:${BuildConfig.VERSION}+${extension.pyVersion}")
+                }
             }
         }
     }
@@ -57,8 +61,7 @@ class KPyPlugin : Plugin<Project> {
 
         dependencies.apply {
             // Setup KSP processor
-            val extension = extensions.getByType(KPyExtension::class.java)
-            add("kspNative", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}+${extension.pyVersion}")
+            add("kspNative", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}")
         }
     }
 
