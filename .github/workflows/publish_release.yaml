@@ -42,10 +42,6 @@ jobs:
                   tar --use-compress-program=unzstd -xvf pkg.tar.zst
               working-directory: kpy-library
 
-            # Set up gradle
-            - name: Validate Gradle wrapper
-              uses: gradle/wrapper-validation-action@v1
-
             # Build all
             - name: Build with Gradle
               uses: gradle/gradle-build-action@v2
