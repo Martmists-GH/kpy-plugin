@@ -6,13 +6,12 @@ import com.martmists.kpy.cfg.BuildConfig
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.repositories
-import org.gradle.kotlin.dsl.task
-import org.gradle.kotlin.dsl.the
+import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.targets
 
-class KPyPlugin : Plugin<Project> {
+open class KPyPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
             setupExtensions()
@@ -23,50 +22,48 @@ class KPyPlugin : Plugin<Project> {
         }
     }
 
-    context(Project)
-    fun setupSourceSets() {
-        kotlinExtension.sourceSets.filter {
-            it.name == "nativeMain"
-        }.forEach { sourceSet ->
-            // KSP generated source code
-            sourceSet.kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/native/nativeMain/kotlin")
+    private fun Project.setupSourceSets() {
+        kotlinExtension.apply {
+            targets.forEach {
+                if (it is KotlinNativeTarget) {
+                    afterEvaluate {
+                        sourceSets.getByName("${it.targetName}Main") {
+                            kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${it.targetName}/${it.targetName}Main/kotlin")
 
-            afterEvaluate {
-                val extension = extensions.getByType(KPyExtension::class.java)
-
-                // KPy Library
-                sourceSet.dependencies {
-                    implementation("com.martmists.kpy:kpy-library:${BuildConfig.VERSION}+${extension.pyVersion}")
+                            val extension = the<KPyExtension>()
+                            dependencies {
+                                implementation("com.martmists.kpy:kpy-library:${BuildConfig.VERSION}+${extension.pyVersion}")
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    context(Project)
-    fun setupPlugins() {
+    private fun Project.setupPlugins() {
         // Apply KSP plugin
         plugins.apply {
             apply(KspGradleSubplugin::class.java)
         }
     }
 
-    context(Project)
-    fun setupDependencies() {
+    private fun Project.setupDependencies() {
         repositories {
             maven {
-                it.name = "KPy Repository"
-                it.setUrl("https://maven.martmists.com/releases/")
+                name = "KPy Repository"
+                setUrl("https://maven.martmists.com/releases/")
             }
         }
 
         dependencies.apply {
-            // Setup KSP processor
-            add("kspNative", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}")
+            kotlinExtension.targets.forEach {
+                add("ksp${it.targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}")
+            }
         }
     }
 
-    context(Project)
-    fun setupTasks() {
+    private fun Project.setupTasks() {
         // Provide setup.py metadata
         task<Task>("setupMetadata") {
             doLast {
@@ -82,8 +79,7 @@ class KPyPlugin : Plugin<Project> {
         }
     }
 
-    context(Project)
-    fun setupExtensions() {
+    private fun Project.setupExtensions() {
         extensions.create<KPyExtension>("kpy")
 
         extensions.getByType(KspExtension::class.java).apply {

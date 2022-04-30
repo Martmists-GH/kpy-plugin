@@ -5,11 +5,13 @@ debug = True
 
 # Build the project
 proc = subprocess.Popen(['../gradlew', 'build'])
-proc.wait()
+if proc.wait() != 0:
+    raise Exception("Gradle build failed with non-zero exit code")
 
 # Fetch configuration
 proc = subprocess.Popen(["../gradlew", "setupMetadata"], stdout=subprocess.PIPE)
-proc.wait()
+if proc.wait() != 0:
+    raise Exception("Gradle build failed with non-zero exit code")
 
 output = proc.stdout.read().decode()
 real_output = output.split("===METADATA START===")[1].split("===METADATA END===")[0]

@@ -59,7 +59,7 @@ jobs:
                   arguments: -PpythonVersion=${{ matrix.python }} publish
 
     build-plugin:
-        runs-on: macos-latest
+        runs-on: ubuntu-latest
         steps:
             # Check out project
             - uses: actions/checkout@v2
@@ -70,32 +70,16 @@ jobs:
                   java-version: '11'
                   distribution: 'adopt'
 
-            # Set up python
-            - uses: actions/setup-python@v3
-              with:
-                  python-version: '3.9'
-
-            # Note: grep installs as ggrep on macos
-            - shell: bash
-              name: Download msys2 python headers
-              run: |
-                  brew install grep 
-                  wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | ggrep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
-                  tar --use-compress-program=unzstd -xvf pkg.tar.zst
-              working-directory: kpy-library
-
             # Set up gradle
             - name: Validate Gradle wrapper
               uses: gradle/wrapper-validation-action@v1
 
             # Build all
             - name: Build with Gradle
-              uses: gradle/gradle-build-action@v2
-              with:
-                  arguments: -PpythonVersion=${{ matrix.python }} build
+              working-directory: kpy-plugin
+              run: ../gradlew build
 
             # Publish plugin
             - name: Publish to Gradle Plugin Repository
-              uses: gradle/gradle-build-action@v2
-              with:
-                  arguments: -PpythonVersion=${{ matrix.python }} publishPlugins
+              working-directory: kpy-plugin
+              run: ../gradlew publishPlugins

@@ -2,6 +2,7 @@ package kpy.wrappers
 
 import kotlinx.cinterop.*
 import kpy.utilities.Freeable
+import kpy.utilities.forget
 import python.*
 
 
@@ -23,6 +24,8 @@ val KtType_StableRefFree = staticCFunction { self: COpaquePointer? ->
     if (obj is Freeable) {
         obj.free()
     }
+
+    obj?.forget()
 
     ref?.dispose()
 }

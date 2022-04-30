@@ -80,6 +80,7 @@ class KPyCodeGenerator(private val projectName: String) {
             |
             |fun createModule() : PyObjectT {
             |    val obj = PyModule_Create2(mod.ptr, PYTHON_API_VERSION)
+            |    ${module.hooks.joinToString("\n") { "${it.simpleName.asString()}(obj)" }}
             |    ${module.classes.joinToString("\n") { "if (obj.addType(KPyType_${it.exportName}) < 0) return null" }}
             |    ${module.children.joinToString("\n") { "if (PyModule_AddObject(obj, \"${it.key}\", ${it.name}.createModule().incref()) < 0) return null" }}
             |    return obj
@@ -155,10 +156,11 @@ class KPyCodeGenerator(private val projectName: String) {
             |        ${parseArgs("__init__", constructor)}
             |
             |        val instance = ${clazz.name}(
-            |            ${params(constructor.parameters.size)}
+            |            ${params(constructor.parameters.map { it.type.resolve().isMarkedNullable })}
             |        )
             |        val ref = StableRef.create(instance)
             |        selfObj.pointed.ktObject = ref.asCPointer()
+            |        self.remember(instance)
             |        0
             |    }
             |
@@ -173,7 +175,7 @@ class KPyCodeGenerator(private val projectName: String) {
             |
         """.trimMargin()
 
-        val parentClass = if (clazz.parent == null) "PyBaseObject_Type" else "${clazz.parent.declaration.packageName}.KPyType_${clazz.parent.name}"
+        val parentClass = if (clazz.parent == null) "PyBaseObject_Type" else "${clazz.parent.declaration.packageName.asString()}.KPyType_${clazz.parent.name}"
 
         write("""
             |private val `${clazz.name}-kpy-init` = staticCFunction { self: PyObjectT, args: PyObjectT, kwargs: PyObjectT ->
@@ -190,20 +192,21 @@ class KPyCodeGenerator(private val projectName: String) {
             |        ${clazz.functions.filter { !it.isSpecial }.joinToString(",\n") { "`${clazz.name}-${it.name}-kpy-def`" }}                
             |    ),
             |    ${clazz.functions.filter { it.isSpecial }.joinToString(",\n") { "${it.name.toKPyName()} = `${clazz.name}-${it.name.toKPyName()}`" }}
-            |)
+            |)._registerType<${clazz.name}>()
             |
         """.trimMargin())
     }
 
     context(OutputStreamWriter)
     fun generateMethod(clazz: KPyClass, function: KPyFunction) {
-        val nargs = function.declaration.parameters.size
+        val params = function.declaration.parameters
+        val nargs = params.size
         val docstring = function.declaration.docString ?: ""
 
         val body = if (nargs != 0) """
             |${parseArgs(function.exportName, function.declaration)}
             |        val result = selfKt.${function.name}(
-            |            ${params(nargs)}
+            |            ${params(params.map { it.type.resolve().isMarkedNullable })}
             |        )
         """.trimMargin() else """
             |val result = selfKt.${function.name}()
@@ -227,17 +230,15 @@ class KPyCodeGenerator(private val projectName: String) {
 
     context(OutputStreamWriter)
     fun generate(function: KPyFunction) {
-        val args = function.declaration.parameters.map {
-            it.name!!.asString()
-        }
-        val nargs = args.size
+        val params = function.declaration.parameters
+        val nargs = params.size
 
         val bodyParams = """
             |memScoped {
             |        ${parseArgs(function.exportName, function.declaration)}
             |        
             |        ${function.name}(
-            |            ${params(nargs)}
+            |            ${params(params.map { it.type.resolve().isMarkedNullable })}
             |        ).toPython()
             |    }
             |
@@ -273,7 +274,9 @@ class KPyCodeGenerator(private val projectName: String) {
         """.trimMargin()
     }
 
-    fun params(num: Int) : String {
-        return (0 until num).joinToString(", ") { "params[$it].value!!.pointed.ptr.toKotlin()" }
+    fun params(nullable: List<Boolean>) : String {
+        return nullable.withIndex().joinToString(", ") {
+            "params[${it.index}].value!!.pointed.ptr.toKotlin${if (it.value) "Nullable" else ""}()"
+        }
     }
 }

@@ -3,9 +3,10 @@ package kpy.ext
 import kotlinx.cinterop.*
 import kpy.wrappers.PyObjectT
 import python.*
+import kotlin.native.ref.WeakReference
 
-val CPointer<PyObject>.kt
-    get(): CPointer<KtPyObject> = reinterpret()
+val CPointer<PyObject>?.kt
+    get(): CPointer<KtPyObject> = this!!.reinterpret()
 
 inline fun <reified T : Any> CPointer<KtPyObject>.cast(): T {
     val ref = this.pointed.ktObject!!.asStableRef<T>()

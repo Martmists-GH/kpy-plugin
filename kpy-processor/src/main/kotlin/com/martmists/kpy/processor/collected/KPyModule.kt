@@ -1,12 +1,14 @@
 package com.martmists.kpy.processor.collected
 
 import com.google.devtools.ksp.symbol.KSFile
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 
 data class KPyModule(
     val name: String,
     val classes: MutableList<KPyClass> = mutableListOf(),
     val functions: MutableList<KPyFunction> = mutableListOf(),
-    val children: MutableList<KPyModule> = mutableListOf()
+    val children: MutableList<KPyModule> = mutableListOf(),
+    val hooks: MutableList<KSFunctionDeclaration> = mutableListOf()
 ) {
     val key = name.split(".").last()
 

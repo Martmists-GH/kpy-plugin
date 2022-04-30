@@ -1,15 +1,31 @@
 package kpy.utilities
 
-import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.CValuesRef
-import kotlinx.cinterop.convert
-import kotlinx.cinterop.toKStringFromUtf8
+import kotlinx.cinterop.*
+import kpy.ext.cast
+import kpy.ext.kt
 import kpy.wrappers.PyObjectT
 import python.*
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
+@PublishedApi
+internal val typeMap = mutableMapOf<KType, PyTypeObject>()
+internal val instanceMap = mutableMapOf<Any, PyObjectT>()
+
+// Avoid using these
+inline fun <reified K> PyTypeObject._registerType() : PyTypeObject {
+    typeMap[typeOf<K>()] = this
+    return this
+}
+fun PyObjectT.remember(item: Any) {
+    instanceMap[item] = this
+}
+fun Any.forget() {
+    instanceMap.remove(this)
+}
+
 inline fun <reified R : Any> PyObjectT.toKotlin() : R = toKotlin(typeOf<R>())
+inline fun <reified R : Any> PyObjectT.toKotlinNullable() : R? = toKotlinNullable(typeOf<R>())
 
 @Suppress("IMPLICIT_CAST_TO_ANY", "UNCHECKED_CAST")
 fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
@@ -38,7 +54,7 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
             val subType = type.arguments[0].type
             val size = PyList_Size(this)
             List(size.convert()) { i ->
-                PyList_GetItem(this, i.convert()).toKotlin(subType) as Any
+                PyList_GetItem(this, i.convert()).toKotlinNullable(subType) as? Any
             }
         }
         Map::class, MutableMap::class -> {
@@ -47,13 +63,13 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
             val size = PyDict_Size(this)
 
             val keys = PyDict_Keys(this).toKotlin<List<PyObjectT>>()
-            val map = mutableMapOf<Any, Any>()
+            val map = mutableMapOf<Any, Any?>()
 
 
             for (i in 0 until size) {
                 val key = keys[i.convert()]
                 val pKey = key.toKotlin(keyType) as Any
-                val pValue = PyDict_GetItem(this, key).toKotlin(valueType) as Any
+                val pValue = PyDict_GetItem(this, key).toKotlinNullable(valueType) as? Any
                 map[pKey] = pValue
             }
         }
@@ -61,8 +77,8 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
             val firstType = type.arguments[0].type
             val secondType = type.arguments[1].type
 
-            val first = PyTuple_GetItem(this, 0).toKotlin(firstType) as Any
-            val second = PyTuple_GetItem(this, 1).toKotlin(secondType) as Any
+            val first = PyTuple_GetItem(this, 0).toKotlinNullable(firstType) as? Any
+            val second = PyTuple_GetItem(this, 1).toKotlinNullable(secondType) as? Any
             Pair(first, second)
         }
         Triple::class -> {
@@ -70,21 +86,31 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
             val secondType = type.arguments[1].type
             val thirdType = type.arguments[2].type
 
-            val first = PyTuple_GetItem(this, 0).toKotlin(firstType) as Any
-            val second = PyTuple_GetItem(this, 1).toKotlin(secondType) as Any
-            val third = PyTuple_GetItem(this, 2).toKotlin(thirdType) as Any
+            val first = PyTuple_GetItem(this, 0).toKotlinNullable(firstType) as? Any
+            val second = PyTuple_GetItem(this, 1).toKotlinNullable(secondType) as? Any
+            val third = PyTuple_GetItem(this, 2).toKotlinNullable(thirdType) as? Any
             Triple(first, second, third)
         }
         CPointer::class, CValuesRef::class, null -> {
             // Assume PyObjectT
             this
         }
-        else -> throw IllegalArgumentException("Unsupported type: $clazz")
+        else -> {
+            // Assume usertype
+            this.kt.cast()
+        }
     } as R
 }
 
+@Suppress("IMPLICIT_CAST_TO_ANY", "UNCHECKED_CAST")
+fun <R : Any> PyObjectT.toKotlinNullable(type: KType?) : R? {
+    return if (this == Py_None) null else toKotlin(type)
+}
+
+inline fun <reified T> T.toPython() = toPython(typeOf<T>())
+
 @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")  // False positive
-fun <T> T.toPython() : PyObjectT {
+fun <T> T.toPython(type: KType) : PyObjectT {
     return when (this) {
         null -> Py_None
         is Unit -> Py_None
@@ -135,6 +161,16 @@ fun <T> T.toPython() : PyObjectT {
             PyTuple_SetItem(tuple, 2, this.third.toPython())
             tuple
         }
-        else -> throw IllegalArgumentException("Unsupported type: ${this!!::class.simpleName}")
+        else -> {
+            // Assume usertype
+            instanceMap[this] ?: let {
+                // Create new
+                PyType_GenericNew(typeMap[type]!!.ptr, null, null).also {
+                    val ref = StableRef.create(this)
+                    it.kt.pointed.ktObject = ref.asCPointer()
+                    it.remember(this)
+                }
+            }
+        }
     }
 }

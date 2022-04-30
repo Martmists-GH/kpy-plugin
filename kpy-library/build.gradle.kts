@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.konan.target.KonanTarget
 plugins {
     kotlin("multiplatform")
     `maven-publish`
+    id("com.github.gmazzo.buildconfig")
 }
 
 kotlin {
@@ -134,7 +135,10 @@ with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') a
     ))
         """.trim()
     )
-    outputs.upToDateWhen { false }
+    files(
+        "${cinteropDir.replace('\\', '/')}/python.def",
+        "${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def",
+    )
 }
 
 for (target in listOf("LinuxX64", "MacosX64", "MingwX64", "LinuxArm64", "MacosArm64")) {

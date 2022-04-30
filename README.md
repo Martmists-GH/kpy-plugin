@@ -12,9 +12,16 @@ plugins {
     id("com.martmists.kpy-plugin") version "0.0.1"
 }
 
+plugins {
+    id("com.google.devtools.ksp")
+    kotlin("multiplatform")
+}
+
+repositories {
+    mavenCentral()
+}
+
 kotlin {
-    // Use the current Host OS as target platform with configuration name "native"
-    // The configuration name *must* be "native" for the plugin to work
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
     val nativeTarget = when {
@@ -23,11 +30,50 @@ kotlin {
         isMingwX64 -> mingwX64("native")
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
-    
+
+    sourceSets {
+        val nativeMain by getting {
+            dependencies {
+                implementation(project(":kpy-library"))
+            }
+
+            kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/native/nativeMain/kotlin")
+        }
+    }
+
     nativeTarget.apply {
-        // Configure the target here
+        val main by compilations.getting {
+
+        }
+
+        binaries {
+            staticLib {
+                binaryOptions["memoryModel"] = "experimental"
+            }
+        }
     }
 }
+
+val setupMetadata by tasks.creating {
+    actions.add {
+        println("""
+            |===METADATA START===
+            |project_name = "${project.name}"
+            |project_version = "${project.version}"
+            |build_dir = "${buildDir.absolutePath.replace('\\', '/')}"
+            |===METADATA END===
+        """.trimMargin())
+    }
+}
+
+ksp {
+    arg("projectName", project.name)
+}
+
+dependencies {
+    add("kspNative", project(":kpy-processor"))
+}
+
 ```
 
 Use the following setup.py template:

@@ -2,16 +2,24 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `java-gradle-plugin`
+    `kotlin-dsl`
     kotlin("jvm")
-    id("com.gradle.plugin-publish")
-    id("com.github.gmazzo.buildconfig")
+    id("com.gradle.plugin-publish") version "0.21.0"
+    id("com.github.gmazzo.buildconfig") version "3.0.3"
+}
+
+version = "0.1.4"
+buildDir = file("../build/kpy-plugin")
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
     implementation(gradleKotlinDsl())
     implementation(kotlin("stdlib"))
     implementation(kotlin("gradle-plugin"))
-    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.6.20-1.0.5")
+    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.6.21-1.0.5")
 }
 
 pluginBundle {
@@ -47,9 +55,5 @@ buildConfig {
 tasks {
     withType<KotlinCompile> {
         dependsOn("generateBuildConfig")
-
-        kotlinOptions {
-            freeCompilerArgs = listOf("-Xcontext-receivers")
-        }
     }
 }

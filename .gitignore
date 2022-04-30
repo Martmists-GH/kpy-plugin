@@ -121,3 +121,4 @@ gradle-app.setting
 ### Project
 *.def
 *.egg-info/
+dist/

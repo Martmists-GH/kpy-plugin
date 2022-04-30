@@ -5,11 +5,10 @@ buildscript {
 }
 
 plugins {
-    kotlin("multiplatform") version "1.6.20" apply false
-    kotlin("jvm") version "1.6.20" apply false
+    kotlin("multiplatform") version "1.6.21" apply false
+    kotlin("jvm") version "1.6.21" apply false
 
-    id("com.google.devtools.ksp") version "1.6.20-1.0.5" apply false
-    id("com.gradle.plugin-publish") version "0.21.0" apply false
+    id("com.google.devtools.ksp") version "1.6.21-1.0.5" apply false
     id("com.github.gmazzo.buildconfig") version "3.0.3" apply false
 
     id("com.github.ben-manes.versions") version "0.42.0"
@@ -43,8 +42,6 @@ subprojects {
         mavenLocal()
         mavenCentral()
     }
-
-    apply(plugin = "com.github.gmazzo.buildconfig")
 
     buildDir = File(rootProject.buildDir.absolutePath + "/" + project.name)
 }
