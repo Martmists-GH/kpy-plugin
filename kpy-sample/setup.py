@@ -28,9 +28,9 @@ def extensions():
     folder = "debugStatic" if debug else "releaseStatic"
 
     native = Extension(snake_case(project_name),
-                       sources=[f'{build_dir}/generated/ksp/native/nativeMain/resources/entrypoint.cpp'],
-                       include_dirs=[f"{build_dir}/bin/native/{folder}/"],
-                       library_dirs=[f"{build_dir}/bin/native/{folder}/"],
+                       sources=[f'{build_dir}/generated/ksp/{target}/{target}Main/resources/entrypoint.cpp'],
+                       include_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
+                       library_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
                        libraries=[snake_case(project_name)])
 
     return [native]

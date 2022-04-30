@@ -9,18 +9,20 @@ repositories {
     mavenCentral()
 }
 
+val targetName = "py"
+
 kotlin {
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
     val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64("py")
-        hostOs == "Linux" -> linuxX64("py")
-        isMingwX64 -> mingwX64("py")
+        hostOs == "Mac OS X" -> macosX64(targetName)
+        hostOs == "Linux" -> linuxX64(targetName)
+        isMingwX64 -> mingwX64(targetName)
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
     sourceSets {
-        val pyMain by getting {
+        getByName("${targetName}Main") {
             dependencies {
                 implementation(project(":kpy-library"))
             }
@@ -49,6 +51,7 @@ val setupMetadata by tasks.creating {
             |===METADATA START===
             |project_name = "${project.name}"
             |project_version = "${project.version}"
+            |target = "$targetName"
             |build_dir = "${buildDir.absolutePath.replace('\\', '/')}"
             |===METADATA END===
         """.trimMargin())

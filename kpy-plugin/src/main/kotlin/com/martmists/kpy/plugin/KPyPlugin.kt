@@ -24,16 +24,14 @@ open class KPyPlugin : Plugin<Project> {
 
     private fun Project.setupSourceSets() {
         kotlinExtension.apply {
-            targets.forEach {
-                if (it is KotlinNativeTarget) {
-                    afterEvaluate {
-                        sourceSets.getByName("${it.targetName}Main") {
-                            kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${it.targetName}/${it.targetName}Main/kotlin")
+            targets.filterIsInstance<KotlinNativeTarget>().forEach {
+                afterEvaluate {
+                    sourceSets.getByName("${it.targetName}Main") {
+                        kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${it.targetName}/${it.targetName}Main/kotlin")
 
-                            val extension = the<KPyExtension>()
-                            dependencies {
-                                implementation("com.martmists.kpy:kpy-library:${BuildConfig.VERSION}+${extension.pyVersion}")
-                            }
+                        val extension = the<KPyExtension>()
+                        dependencies {
+                            implementation("com.martmists.kpy:kpy-library:${BuildConfig.VERSION}+${extension.pyVersion}")
                         }
                     }
                 }
@@ -66,12 +64,14 @@ open class KPyPlugin : Plugin<Project> {
     private fun Project.setupTasks() {
         // Provide setup.py metadata
         task<Task>("setupMetadata") {
-            doLast {
+            actions.add {
+                val target = kotlinExtension.targets.first { it is KotlinNativeTarget } as KotlinNativeTarget
                 println("""
                     |===METADATA START===
                     |project_name = "$name"
                     |project_version = "$version"
                     |build_dir = "${buildDir.absolutePath}"
+                    |bin_dir = "${buildDir.absolutePath}/bin/${target.targetName}"
                     ${the<KPyExtension>().props.map { (key, value) -> "|$key = $value" }.joinToString { "\n" }}
                     |===METADATA END===
                 """.trimMargin())
