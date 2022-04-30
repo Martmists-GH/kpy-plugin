@@ -66,10 +66,6 @@ jobs:
                   java-version: '11'
                   distribution: 'adopt'
 
-            # Set up gradle
-            - name: Validate Gradle wrapper
-              uses: gradle/wrapper-validation-action@v1
-
             # Build all
             - name: Build with Gradle
               working-directory: kpy-plugin
