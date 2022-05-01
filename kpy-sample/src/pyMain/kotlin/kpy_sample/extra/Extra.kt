@@ -6,7 +6,7 @@ import kpy.annotations.PyMagicMethod
 import kpy.annotations.PyMagicMethod.NB_INVERT
 
 @PyExport
-class Extra(private val x: Int) {
+open class Extra(private val x: Int) {
     @PyExport("x")
     fun getX(): Int {
         return x

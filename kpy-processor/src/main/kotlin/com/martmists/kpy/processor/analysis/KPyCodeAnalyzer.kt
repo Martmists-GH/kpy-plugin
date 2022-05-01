@@ -43,13 +43,13 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
 
     private fun KSClassDeclaration.asKPy() : KPyClass {
         val funcs = getAllFunctions().filter {
-            it.annotations.any {
+            it.parentDeclaration == this && it.annotations.any {
                 it.shortName.asString() == "PyExport"
             }
         }
 
         val magic = getAllFunctions().filter {
-            it.annotations.any {
+            it.parentDeclaration == this && it.annotations.any {
                 it.shortName.asString() == "PyMagic"
             }
         }

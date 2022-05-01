@@ -225,8 +225,6 @@ class KPyCodeGenerator(private val projectName: String) {
             |    ${if (clazz.declaration.isAbstract()) abstractBody else implBody}
             |}
             |
-            |private fun `kpy-parent-type`(): PyObjectT = ${parentClass}.ptr.reinterpret()
-            |
             |val KPyType_${clazz.name} = makePyType(
             |    name = "${clazz.declaration.packageName.asString()}.${clazz.exportName}",
             |    ktp_init = `${clazz.name}-kpy-init`,
