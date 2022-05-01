@@ -8,7 +8,6 @@ plugins {
     id("com.github.gmazzo.buildconfig") version "3.0.3"
 }
 
-version = "0.1.4"
 buildDir = file("../build/kpy-plugin")
 
 repositories {
