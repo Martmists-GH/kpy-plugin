@@ -9,6 +9,8 @@ import kpy.wrappers.PyType_GenericAllocKt
 import kpy.wrappers.PyType_GenericNewKt
 import python.*
 
+val Py_TPFLAGS_DEFAULT = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION.toULong() or Py_TPFLAGS_HAVE_VERSION_TAG.toULong()
+
 inline fun <reified T> makePyType(
     ktp_dealloc: destructor? = null,
     ktp_vectorcall_offset: Py_ssize_t = 0,
@@ -23,7 +25,7 @@ inline fun <reified T> makePyType(
     ktp_getattro: getattrofunc? = null,
     ktp_setattro: setattrofunc? = null,
     ktp_as_buffer: Map<String, FuncPtr<*>>? = null,
-    ktp_flags: ULong = (Py_TPFLAGS_DEFAULT.toULong() or Py_TPFLAGS_BASETYPE.toULong()).convert(),
+    ktp_flags: ULong = (Py_TPFLAGS_DEFAULT or Py_TPFLAGS_BASETYPE.toULong()).convert(),
     ktp_doc: String? = null,
     ktp_traverse: traverseproc? = null,
     ktp_clear: inquiry? = null,

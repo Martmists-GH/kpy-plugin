@@ -30,7 +30,7 @@ tasks {
     }
 }
 
-if (project.ext.has("mavenToken")) {
+if (findProperty("mavenToken") != null) {
     publishing {
         repositories {
             maven {
@@ -43,8 +43,14 @@ if (project.ext.has("mavenToken")) {
             }
         }
 
-        publications.withType<MavenPublication> {
+        publications {
+            create<MavenPublication>("jvm") {
+                groupId = project.group as String
+                artifactId = project.name
+                version = project.version as String
 
+                from(components["java"])
+            }
         }
     }
 } else if (System.getenv("CI") == "true") {
@@ -57,6 +63,16 @@ if (project.ext.has("mavenToken")) {
                     username = "kpy-actions"
                     password = System.getenv("DEPLOY_KEY")!!
                 }
+            }
+        }
+
+        publications {
+            create<MavenPublication>("jvm") {
+                groupId = project.group as String
+                artifactId = project.name
+                version = project.version as String
+
+                from(components["java"])
             }
         }
 
