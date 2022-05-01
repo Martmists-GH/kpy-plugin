@@ -161,6 +161,9 @@ fun <T> T.toPython(type: KType) : PyObjectT {
             PyTuple_SetItem(tuple, 2, this.third.toPython())
             tuple
         }
+        is CPointer<*> -> {
+            this as PyObjectT
+        }
         else -> {
             // Assume usertype
             instanceMap[this] ?: let {

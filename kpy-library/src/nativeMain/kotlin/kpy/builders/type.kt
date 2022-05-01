@@ -123,7 +123,7 @@ fun makePyType(
 ) = nativeHeap.alloc<PyTypeObject> {
     ob_base.PyVarObject_HEAD_INIT(PyType_Type.ptr, 0)
     tp_name = makeString(name)
-    tp_basicsize = sizeOf<KtPyObject>()
+    tp_basicsize = sizeOf<KtPyObject>() + sizeOf<CPointerVar<*>>()
     tp_itemsize = 0
     tp_dealloc = ktp_dealloc
     tp_vectorcall_offset = ktp_vectorcall_offset
@@ -227,7 +227,7 @@ fun makePyType(
     tp_dict = null
     tp_descr_get = ktp_descr_get
     tp_descr_set = ktp_descr_set
-    tp_dictoffset = 0
+    tp_dictoffset = sizeOf<KtPyObject>()
     tp_init = ktp_init
     tp_alloc = ktp_alloc
     tp_new = ktp_new
