@@ -331,7 +331,7 @@ class KPyCodeGenerator(private val projectName: String) {
                 "nb_inplace_remainder", "nb_divmod", "nb_lshift", "nb_inplace_lshift", "nb_rshift", "nb_inplace_rshift", "nb_and", "nb_inplace_and",
                 "nb_xor", "nb_inplace_xor", "nb_or", "nb_inplace_or", "nb_floor_divide", "nb_inplace_floor_divide", "nb_true_divide", "nb_inplace_true_divide",
                 "nb_matrix_multiply", "nb_inplace_matrix_multiply", "mp_subscript", "sq_concat", "sq_inplace_concat", "sq_inplace_repeat" -> generateBinaryfunc(clazz, function)
-            "tp_setattro", "nb_power", "nb_inplace_power" -> generateTernaryfunc(clazz, function)
+            "nb_power", "nb_inplace_power" -> generateTernaryfunc(clazz, function)
             "tp_traverse" -> generateTraverseproc(clazz, function)
             "tp_richcompare" -> generateRichcmpfunc(clazz, function)
             "nb_bool" -> generateInquiry(clazz, function)
@@ -339,7 +339,7 @@ class KPyCodeGenerator(private val projectName: String) {
             "mp_ass_subscript" -> generateObjobjargproc(clazz, function)
             "sq_repeat", "sq_item" -> generateSsizeargfunc(clazz, function)
             "sq_ass_item" -> generateSsizeobjargproc(clazz, function)
-            "sq_contains" -> generateObjobjproc(clazz, function)
+            "tp_setattro", "sq_contains" -> generateObjobjproc(clazz, function)
             "bf_getbuffer" -> generateGetbufferproc(clazz, function)
             "bf_releasebuffer" -> generateReleasebufferproc(clazz, function)
         }
