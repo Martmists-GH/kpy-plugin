@@ -8,4 +8,5 @@ data class KPyClass(
     val declaration: KSClassDeclaration,
     val parent: KPyClass?,
     val functions: MutableList<KPyFunction> = mutableListOf(),
+    val magic: MutableList<KPyFunction> = mutableListOf(),
 )

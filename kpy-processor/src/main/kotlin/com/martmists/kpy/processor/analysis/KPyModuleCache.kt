@@ -1,4 +1,4 @@
-package com.martmists.kpy.processor
+package com.martmists.kpy.processor.analysis
 
 import com.martmists.kpy.processor.collected.KPyModule
 

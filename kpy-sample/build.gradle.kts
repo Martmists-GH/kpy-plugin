@@ -27,7 +27,7 @@ kotlin {
                 implementation(project(":kpy-library"))
             }
 
-            kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/native/pyMain/kotlin")
+            kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/$targetName/${targetName}Main/kotlin")
         }
     }
 

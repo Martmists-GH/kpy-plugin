@@ -1,9 +1,11 @@
 package kpy_sample
 
+import kotlinx.cinterop.pointed
 import kotlinx.cinterop.toKString
 import kpy.annotations.PyExport
 import kpy.annotations.PyModuleHook
 import kpy.wrappers.PyObjectT
+import kpy_sample.extra.KPyType_Extra
 import python.PyModule_GetName
 
 @PyExport

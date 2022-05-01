@@ -6,5 +6,4 @@ data class KPyFunction(
     val name: String,
     val exportName: String,
     val declaration: KSFunctionDeclaration,
-    val isSpecial: Boolean
 )
