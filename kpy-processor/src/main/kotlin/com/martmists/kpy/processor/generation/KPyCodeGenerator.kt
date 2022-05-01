@@ -338,8 +338,8 @@ class KPyCodeGenerator(private val projectName: String) {
             "mp_length", "sq_length" -> generateLenfunc(clazz, function)
             "mp_ass_subscript" -> generateObjobjargproc(clazz, function)
             "sq_repeat", "sq_item" -> generateSsizeargfunc(clazz, function)
-            "sq_ass_item" -> generateSsizeobjargproc(clazz, function)
-            "tp_setattro", "sq_contains" -> generateObjobjproc(clazz, function)
+            "tp_setattro", "sq_ass_item" -> generateSsizeobjargproc(clazz, function)
+            "sq_contains" -> generateObjobjproc(clazz, function)
             "bf_getbuffer" -> generateGetbufferproc(clazz, function)
             "bf_releasebuffer" -> generateReleasebufferproc(clazz, function)
         }
