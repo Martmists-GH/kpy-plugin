@@ -175,14 +175,14 @@ class KPyCodeGenerator(private val projectName: String) {
             |
         """.trimMargin()
 
-        val parentClass = if (clazz.parent == null) "PyBaseObject_Type" else "${clazz.parent.declaration.packageName.asString()}.KPyType_${clazz.parent.name}"
+        val parentClass = if (clazz.parent == null) "PyBaseObject_Type" else "`${clazz.parent.declaration.packageName.asString()}`.`KPyType_${clazz.parent.name}`"
 
         write("""
             |private val `${clazz.name}-kpy-init` = staticCFunction { self: PyObjectT, args: PyObjectT, kwargs: PyObjectT ->
             |    ${if (clazz.declaration.isAbstract()) abstractBody else implBody}
             |}
             |
-            |private fun `kpy-parent-type`(): PyObjectT = `${parentClass}`.ptr.reinterpret()
+            |private fun `kpy-parent-type`(): PyObjectT = ${parentClass}.ptr.reinterpret()
             |
             |val KPyType_${clazz.name} = makePyType(
             |    name = "${clazz.declaration.packageName.asString()}.${clazz.exportName}",
