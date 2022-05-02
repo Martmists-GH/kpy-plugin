@@ -233,7 +233,8 @@ class KPyCodeGenerator(private val projectName: String) {
             |    ktp_methods = listOf(
             |        ${clazz.functions.joinToString(",\n") { "`${clazz.name}-${it.name}-kpy-def`" }}                
             |    ),
-            |    ${magic_props}
+            |    $magic_props
+            |    ${if (clazz.declaration.annotations.firstOrNull { it.shortName.getShortName() == "PyDictClass" } != null) "ktp_has_dictoffset = true," else ""}
             |)._registerType<${clazz.name}>()
             |
         """.trimMargin())

@@ -1,8 +1,8 @@
 package kpy.annotations
 
 /**
- * Export the annotated function/class/method
+ * Adds tp_dictoffset to the struct and allocates another void* for the dictptr.
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
-annotation class PyExport(val name: String = "")
+annotation class PyDictClass

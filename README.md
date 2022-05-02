@@ -2,28 +2,37 @@
 
 The KPy gradle plugin allows you to write kotlin/native code and use it from python.
 
+## Features
+
+### Implemented
+
+- Export Kotlin/Native functions and classes without having to touch the Python API directly
+- Convert between Kotlin and Python types with .toPython() and .toKotlin()
+- Conversions handled mostly automatically
+- Class inheritance mapped to python
+
+### Planned
+
+- Map enum classes to Python enums
+- Catch Kotlin exceptions and raise them as Python exceptions 
+
 ## Setup
 
+Change your gradle version to 7.5 (nightly builds only as of writing)
 Enable the plugin in your build.gradle.kts file:
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "1.6.20"  // current compatible version
-    id("com.martmists.kpy-plugin") version "0.0.1"
-}
-
-plugins {
-    id("com.google.devtools.ksp")
-    kotlin("multiplatform")
-}
-
-repositories {
-    mavenCentral()
+    kotlin("multiplatform") version "1.6.21"  // current compatible version
+    id("com.martmists.kpy.kpy-plugin") version "0.1.13"  // Requires Gradle 7.5+
 }
 
 kotlin {
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
+    // You can rename the target from `native` to something else, 
+    // but make sure to also change setup.py to match this change!
+    // ARM targets are also supported, but I don't know how to test for them
     val nativeTarget = when {
         hostOs == "Mac OS X" -> macosX64("native")
         hostOs == "Linux" -> linuxX64("native")
@@ -31,49 +40,16 @@ kotlin {
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
-    sourceSets {
-        val nativeMain by getting {
-            dependencies {
-                implementation(project(":kpy-library"))
-            }
-
-            kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/native/nativeMain/kotlin")
-        }
-    }
-
+    // Optional: Better memory manager
     nativeTarget.apply {
-        val main by compilations.getting {
-
-        }
-
         binaries {
             staticLib {
                 binaryOptions["memoryModel"] = "experimental"
+                freeCompilerArgs += listOf("-Xgc=cms")
             }
         }
     }
 }
-
-val setupMetadata by tasks.creating {
-    actions.add {
-        println("""
-            |===METADATA START===
-            |project_name = "${project.name}"
-            |project_version = "${project.version}"
-            |build_dir = "${buildDir.absolutePath.replace('\\', '/')}"
-            |===METADATA END===
-        """.trimMargin())
-    }
-}
-
-ksp {
-    arg("projectName", project.name)
-}
-
-dependencies {
-    add("kspNative", project(":kpy-processor"))
-}
-
 ```
 
 Use the following setup.py template:
@@ -83,7 +59,7 @@ from platform import system
 from setuptools import setup, Extension
 from subprocess import Popen, PIPE
 
-osname = platform.system()
+osname = system()
 debug = True
 
 if osname == "Linux":
@@ -92,11 +68,11 @@ else:
     gradle_bin = "./gradlew.bat"
 
 # Build the project
-proc = subprocess.Popen([gradle_bin, "build"])
+proc = Popen([gradle_bin, "build"])
 proc.wait()
 
 # Fetch configuration from gradle task
-proc = subprocess.Popen([gradle_bin, "setupMetadata"], stdout=subprocess.PIPE)
+proc = Popen([gradle_bin, "setupMetadata"], stdout=PIPE)
 proc.wait()
 output = proc.stdout.read().decode()
 real_output = output.split("===METADATA START===")[1].split("===METADATA END===")[0]
@@ -104,8 +80,10 @@ real_output = output.split("===METADATA START===")[1].split("===METADATA END==="
 # Apply the configuration
 exec(real_output, globals(), locals())
 
+
 def snake_case(name):
     return name.replace("-", "_").lower()
+
 
 def extensions():
     folder = "debugStatic" if debug else "releaseStatic"
@@ -117,6 +95,7 @@ def extensions():
                        libraries=[snake_case(project_name)])
 
     return [native]
+
 
 with open("README.md", "r") as fp:
     long_description = fp.read()
@@ -136,12 +115,12 @@ You can pass additional metadata from gradle to setup.py using the `kpy` configu
 
 ```kotlin
 kpy {
-    metadata("my_key", "'my_value'")  // Note: the second parameter is an expression, and must be valid python.
+    metadata("my_key", "'my' + 'value'")  // Note: the second parameter is an expression, and must be valid python.
 }
 ```
 
 Then you can simply use it as a variable in your setup.py:
 
 ```python
-print(my_key)  // prints "my_value"
+print(my_key)  // prints "myvalue"
 ```

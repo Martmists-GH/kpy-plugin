@@ -46,6 +46,7 @@ inline fun <reified T> makePyType(
     ktp_is_gc: inquiry? = null,
     ktp_finalize: destructor? = null,
     ktp_vectorcall: vectorcallfunc? = null,
+    ktp_has_dictoffset: Boolean = false,
 ) = makePyType(
     T::class.qualifiedName!!,
     ktp_dealloc,
@@ -81,7 +82,8 @@ inline fun <reified T> makePyType(
     ktp_free,
     ktp_is_gc,
     ktp_finalize,
-    ktp_vectorcall
+    ktp_vectorcall,
+    ktp_has_dictoffset
 )
 
 fun makePyType(
@@ -120,10 +122,11 @@ fun makePyType(
     ktp_is_gc: inquiry? = null,
     ktp_finalize: destructor? = null,
     ktp_vectorcall: vectorcallfunc? = null,
+    ktp_has_dictoffset: Boolean = false,
 ) = nativeHeap.alloc<PyTypeObject> {
     ob_base.PyVarObject_HEAD_INIT(PyType_Type.ptr, 0)
     tp_name = makeString(name)
-    tp_basicsize = sizeOf<KtPyObject>()
+    tp_basicsize = sizeOf<KtPyObject>() + if (ktp_has_dictoffset) sizeOf<CPointerVar<*>>() else 0
     tp_itemsize = 0
     tp_dealloc = ktp_dealloc
     tp_vectorcall_offset = ktp_vectorcall_offset
@@ -227,7 +230,7 @@ fun makePyType(
     tp_dict = null
     tp_descr_get = ktp_descr_get
     tp_descr_set = ktp_descr_set
-    tp_dictoffset = 0
+    tp_dictoffset = if (ktp_has_dictoffset) sizeOf<KtPyObject>() else 0
     tp_init = ktp_init
     tp_alloc = ktp_alloc
     tp_new = ktp_new

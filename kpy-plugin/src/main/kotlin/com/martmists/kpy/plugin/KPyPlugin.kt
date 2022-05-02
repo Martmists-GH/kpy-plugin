@@ -48,6 +48,7 @@ open class KPyPlugin : Plugin<Project> {
 
     private fun Project.setupDependencies() {
         repositories {
+            mavenCentral()
             maven {
                 name = "KPy Repository"
                 setUrl("https://maven.martmists.com/releases/")
