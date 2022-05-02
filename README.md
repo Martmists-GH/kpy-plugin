@@ -21,13 +21,15 @@ The KPy gradle plugin allows you to write kotlin/native code and use it from pyt
 
 ## Setup
 
+> Note: The plugin is not yet publicly available, see kpy-sample as reference for now.
+
 Change your gradle version to 7.5 (nightly builds only as of writing)
 Enable the plugin in your build.gradle.kts file:
 
 ```kotlin
 plugins {
     kotlin("multiplatform") version "1.6.21"  // current compatible version
-    id("com.martmists.kpy.kpy-plugin") version "0.1.13"  // Requires Gradle 7.5+
+    id("com.martmists.kpy.kpy-plugin") version "0.2.0"  // Requires Gradle 7.5+
 }
 
 kotlin {
