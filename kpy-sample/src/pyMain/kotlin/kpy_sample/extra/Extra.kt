@@ -4,6 +4,9 @@ import kpy.annotations.PyExport
 import kpy.annotations.PyMagic
 import kpy.annotations.PyMagicMethod
 import kpy.annotations.PyMagicMethod.NB_INVERT
+import kpy.utilities.toPython
+import kpy.wrappers.PyObjectT
+import python.PyObject_GenericGetAttr
 
 @PyExport
 open class Extra(private val x: Int) {
@@ -20,5 +23,10 @@ open class Extra(private val x: Int) {
     @PyMagic(NB_INVERT)
     fun invert() {
 
+    }
+
+    @PyMagic(PyMagicMethod.TP_GETATTRO)
+    internal fun __getattr__(name: String): PyObjectT {
+        return PyObject_GenericGetAttr(this.toPython(), name.toPython())
     }
 }

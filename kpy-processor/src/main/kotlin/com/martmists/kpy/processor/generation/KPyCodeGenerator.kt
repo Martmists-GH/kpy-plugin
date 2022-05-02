@@ -172,6 +172,7 @@ class KPyCodeGenerator(private val projectName: String) {
             |        val instance = ${clazz.name}()
             |        val ref = StableRef.create(instance)
             |        selfObj.pointed.ktObject = ref.asCPointer()
+            |        self.remember(instance)
             |        0
             |    }
             |
