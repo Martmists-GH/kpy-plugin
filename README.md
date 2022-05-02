@@ -10,11 +10,14 @@ The KPy gradle plugin allows you to write kotlin/native code and use it from pyt
 - Convert between Kotlin and Python types with .toPython() and .toKotlin()
 - Conversions handled mostly automatically
 - Class inheritance mapped to python
+- Generate Python stubs
 
 ### Planned
 
 - Map enum classes to Python enums
-- Catch Kotlin exceptions and raise them as Python exceptions 
+- Catch Kotlin exceptions and raise them as Python exceptions
+- Vararg support
+- Generics?
 
 ## Setup
 
@@ -87,11 +90,11 @@ def snake_case(name):
 
 def extensions():
     folder = "debugStatic" if debug else "releaseStatic"
-
-    native = Extension(snake_case(project_name),
-                       sources=[f'{build_dir}/generated/ksp/native/nativeMain/resources/entrypoint.cpp'],
-                       include_dirs=[f"{build_dir}/bin/native/{folder}/"],
-                       library_dirs=[f"{build_dir}/bin/native/{folder}/"],
+    prefix = "_" if has_stubs else ""
+    native = Extension(prefix + snake_case(project_name),
+                       sources=[f'{build_dir}/generated/ksp/{target}/{target}Main/resources/entrypoint.cpp'],
+                       include_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
+                       library_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
                        libraries=[snake_case(project_name)])
 
     return [native]
@@ -100,27 +103,43 @@ def extensions():
 with open("README.md", "r") as fp:
     long_description = fp.read()
 
+
+attrs = {}
+
+if has_stubs:
+    stub_root = f'{build_dir}/generated/ksp/{target}/{target}Main/resources/'
+    attrs["packages"] = find_packages(where=stub_root)
+    attrs["package_dir"] = {"": stub_root}
+else:
+    attrs["packages"] = []
+
+    
 setup(
     name=snake_case(project_name),
     version=project_version,
     description=long_description,
     ext_modules=extensions(),
-    packages=[],
+    **attrs
 )
 ```
 
 ## Configuration
 
-You can pass additional metadata from gradle to setup.py using the `kpy` configuration.
+To configure the plugin, you can use the `kpy` configuration.
 
 ```kotlin
 kpy {
-    metadata("my_key", "'my' + 'value'")  // Note: the second parameter is an expression, and must be valid python.
+    // Pass properties to setup.py, the exec() command will pass them to the context
+    // Note: the second parameter is an expression, and must be valid python.
+    metadata("my_key", "'my' + 'value'")  // in setup.py you can now use my_key and it evaluates to 'myvalue'
+
+    // Specify the python version to build against.
+    // Currently supported: [3.9, 3.10]
+    pyVersion = "3.9"
+
+    // Generate python stubs for the native sources
+    // These are stored to `build/generated/ksp/<target>/<target>Main/resources/`
+    // Note: these will be overwritten every time you build the project
+    generateStubs = true
 }
-```
-
-Then you can simply use it as a variable in your setup.py:
-
-```python
-print(my_key)  // prints "myvalue"
 ```

@@ -67,13 +67,15 @@ open class KPyPlugin : Plugin<Project> {
         task<Task>("setupMetadata") {
             actions.add {
                 val target = kotlinExtension.targets.first { it is KotlinNativeTarget } as KotlinNativeTarget
+                val ext = the<KPyExtension>()
                 println("""
                     |===METADATA START===
                     |project_name = "$name"
                     |project_version = "$version"
                     |build_dir = "${buildDir.absolutePath}"
                     |bin_dir = "${buildDir.absolutePath}/bin/${target.targetName}"
-                    ${the<KPyExtension>().props.map { (key, value) -> "|$key = $value" }.joinToString { "\n" }}
+                    |has_stubs = ${if (ext.generateStubs) "True" else "False"}
+                    ${ext.props.map { (key, value) -> "|$key = $value" }.joinToString { "\n" }}
                     |===METADATA END===
                 """.trimMargin())
             }
@@ -81,10 +83,13 @@ open class KPyPlugin : Plugin<Project> {
     }
 
     private fun Project.setupExtensions() {
-        extensions.create<KPyExtension>("kpy")
+        val ext = extensions.create<KPyExtension>("kpy")
 
         extensions.getByType(KspExtension::class.java).apply {
             arg("projectName", name)
+            afterEvaluate {
+                arg("generateStubs", "${ext.generateStubs}")
+            }
         }
     }
 }

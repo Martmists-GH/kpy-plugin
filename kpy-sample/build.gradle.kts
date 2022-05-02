@@ -52,6 +52,7 @@ val setupMetadata by tasks.creating {
             |project_name = "${project.name}"
             |project_version = "${project.version}"
             |target = "$targetName"
+            |has_stubs = True
             |build_dir = "${buildDir.absolutePath.replace('\\', '/')}"
             |===METADATA END===
         """.trimMargin())
@@ -60,6 +61,7 @@ val setupMetadata by tasks.creating {
 
 ksp {
     arg("projectName", project.name)
+    arg("generateStubs", "true")
 }
 
 dependencies {

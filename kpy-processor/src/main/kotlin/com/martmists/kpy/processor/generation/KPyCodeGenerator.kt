@@ -10,7 +10,7 @@ import com.martmists.kpy.processor.collected.KPyModule
 import com.martmists.kpy.processor.ext.toSnakeCase
 import java.io.OutputStreamWriter
 
-class KPyCodeGenerator(private val projectName: String) {
+class KPyCodeGenerator(private val projectName: String, private val generateStubs: Boolean) {
     context(CodeGenerator)
     fun generate(module: KPyModule) {
         for (child in module.children) {
@@ -94,7 +94,7 @@ class KPyCodeGenerator(private val projectName: String) {
             |#include "lib${projectName.toSnakeCase()}_api.h"
             |
             |extern "C" {
-            |PyMODINIT_FUNC PyInit_${module.name}(void) {
+            |PyMODINIT_FUNC PyInit_${if (generateStubs) "_${module.name}" else module.name} (void) {
             |    return (PyObject*)lib${projectName.toSnakeCase()}_symbols()->kotlin.root.initialize();
             |}
             |}

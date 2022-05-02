@@ -3,8 +3,14 @@ package com.martmists.kpy.plugin
 open class KPyExtension {
     internal val props = mutableMapOf<String, String>()
 
+    // Version to target
+    // Supported: [3.9, 3.10]
     var pyVersion: String = "3.9"
 
+    // Generates the native code under _{name} and adds python stubs
+    var generateStubs: Boolean = true
+
+    // Add properties to propagate to setup.py
     fun metadata(name: String, value: String) {
         props[name] = value
     }
