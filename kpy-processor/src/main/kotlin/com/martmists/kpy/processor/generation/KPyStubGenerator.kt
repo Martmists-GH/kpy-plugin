@@ -2,6 +2,9 @@ package com.martmists.kpy.processor.generation
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSTypeAlias
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.martmists.kpy.processor.collected.KPyClass
 import com.martmists.kpy.processor.collected.KPyFunction
 import com.martmists.kpy.processor.collected.KPyModule
@@ -40,7 +43,12 @@ class KPyStubGenerator {
                 ).use { stream ->
                     OutputStreamWriter(stream).use {
                         with(it) {
-                            write("import _${module.name}\n\n")
+                            write("""
+                                |import _${module.name}
+                                |from typing import Any, Dict, List, Optional, Tuple
+                                |
+                                |
+                            """.trimMargin())
 
                             for (function in module.functions) {
                                 generate(function)
@@ -79,22 +87,22 @@ class KPyStubGenerator {
 
     context(KPyModule, OutputStreamWriter)
     private fun generate(clazz: KPyClass) {
-
-
         val superclass = if (clazz.parent != null) {
             write("import ${clazz.parent.declaration.packageName.asString()}.${clazz.parent.exportName.lowercase()} as ${clazz.parent.exportName.lowercase()}\n")
             "${clazz.parent.exportName.lowercase()}.${clazz.parent.exportName}"
         } else null
 
-        val constructorParams = clazz.declaration.primaryConstructor!!.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
+        val constructorParams = clazz.declaration.primaryConstructor!!.parameters.withIndex().joinToString(", ") { remapParam(it.value, it.index) }
+        val constructorParamsNoType = clazz.declaration.primaryConstructor!!.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
         val constructorParamsComma = if (constructorParams.isEmpty()) "" else ", $constructorParams"
 
         write("""
             |import _${name.split('.').first()}
+            |from typing import Any, Dict, List, Optional, Tuple
             |
             |class ${clazz.exportName}(_$name.${clazz.exportName}${superclass?.let { ", $it" } ?: ""}):
             |    def __init__(self$constructorParamsComma):
-            |       super().__init__($constructorParams)
+            |       super().__init__($constructorParamsNoType)
             |
             |
         """.trimMargin())
@@ -110,7 +118,8 @@ class KPyStubGenerator {
 
     context(OutputStreamWriter)
     private fun generateMethod(function: KPyFunction) {
-        val params = function.declaration.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
+        val params = function.declaration.parameters.withIndex().joinToString(", ") { remapParam(it.value, it.index) }
+        val paramsNoType = function.declaration.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
         val paramsComma = if (params.isNotEmpty()) ", $params" else ""
 
         val doc = if (function.declaration.docString != null) {
@@ -122,8 +131,8 @@ class KPyStubGenerator {
         }
 
         write("""
-            |    def ${function.exportName}(self$paramsComma):$doc
-            |        return super().${function.exportName}($params)
+            |    def ${function.exportName}(self$paramsComma) -> ${remapType(function.declaration.returnType!!.resolve())}:$doc
+            |        return super().${function.exportName}($paramsNoType)
             |
             |
         """.trimMargin())
@@ -131,7 +140,8 @@ class KPyStubGenerator {
 
     context(OutputStreamWriter)
     private fun generateMagic(function: KPyFunction) {
-        val params = function.declaration.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
+        val params = function.declaration.parameters.withIndex().joinToString(", ") { remapParam(it.value, it.index) }
+        val paramsNoType = function.declaration.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
         val paramsComma = if (params.isNotEmpty()) ", $params" else ""
         val magicName = transformMagic(function.exportName)
 
@@ -144,8 +154,8 @@ class KPyStubGenerator {
         }
 
         write("""
-            |    def $magicName(self$paramsComma):$doc
-            |        return super().$magicName($params)
+            |    def $magicName(self$paramsComma) -> ${remapType(function.declaration.returnType!!.resolve())}:$doc
+            |        return super().$magicName($paramsNoType)
             |
             |
         """.trimMargin())
@@ -153,7 +163,8 @@ class KPyStubGenerator {
 
     context(KPyModule, OutputStreamWriter)
     private fun generate(function: KPyFunction) {
-        val params = function.declaration.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
+        val params = function.declaration.parameters.withIndex().joinToString(", ") { remapParam(it.value, it.index) }
+        val paramsNoType = function.declaration.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
         val doc = if (function.declaration.docString != null) {
             "\n" + ("'''\n" +
                     "${function.declaration.docString}\n" +
@@ -163,8 +174,8 @@ class KPyStubGenerator {
         }
 
         write("""
-            |def ${function.exportName}($params):$doc
-            |    return _${name}.${function.exportName}($params)
+            |def ${function.exportName}($params) -> ${remapType(function.declaration.returnType!!.resolve())}:$doc
+            |    return _${name}.${function.exportName}($paramsNoType)
             |
             |
         """.trimMargin())
@@ -229,5 +240,44 @@ class KPyStubGenerator {
             "mp_ass_subscript" -> "__setitem__"
             else -> name
         }
+    }
+
+    private fun remapParam(param: KSValueParameter, index: Int): String {
+        return "${param.name?.asString() ?: "arg$index"}: ${remapType(param.type.resolve())}"
+    }
+
+    private fun remapType(type: KSType) : String {
+        val it = type.toString().removeSuffix("?")
+        val newType = when {
+            // Primitives
+            it == "Int" -> "int"
+            it == "Long" -> "int"
+            it == "Float" -> "float"
+            it == "Double" -> "float"
+            it == "Bool" -> "bool"
+            it == "String" -> "str"
+            it == "Unit" -> "None"
+
+            // Array types
+            it == "FloatArray" -> "List[float]"
+            it == "DoubleArray" -> "List[float]"
+            it == "IntArray" -> "List[int]"
+            it == "LongArray" -> "List[int]"
+            it == "ByteArray" -> "bytes"
+
+            // PyObject* aka Any
+            it == "CPointer<_object>" -> "Any"
+            it == "Any" -> "Any"
+
+            // Generic types
+            it.startsWith("List<") -> "List[${remapType(type.arguments.first().type!!.resolve())}]"
+            it.startsWith("Map<") -> "Dict[${type.arguments.joinToString(", ") { remapType(it.type!!.resolve()) }}]"
+            it.startsWith("Pair<") || it.startsWith("Triple<") -> "Tuple[${type.arguments.joinToString(", ") { remapType(it.type!!.resolve()) }}]"
+
+            // Type aliases
+            it.startsWith("[typealias ") -> remapType((type.declaration as KSTypeAlias).type.resolve())
+            else -> "'$it'"
+        }
+        return if (type.toString().endsWith('?')) "Optional[$newType]" else newType
     }
 }

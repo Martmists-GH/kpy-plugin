@@ -4,6 +4,7 @@ import kotlinx.cinterop.*
 import kpy.ext.cast
 import kpy.ext.kt
 import kpy.wrappers.PyObjectT
+import platform.posix.memcpy
 import python.*
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -44,11 +45,27 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
                 PyList_GetItem(this, i.convert()).toKotlin()
             }
         }
+        DoubleArray::class -> {
+            val size = PyList_Size(this)
+            DoubleArray(size.convert()) { i ->
+                PyList_GetItem(this, i.convert()).toKotlin()
+            }
+        }
         IntArray::class -> {
             val size = PyList_Size(this)
             IntArray(size.convert()) { i ->
                 PyList_GetItem(this, i.convert()).toKotlin()
             }
+        }
+        LongArray::class -> {
+            val size = PyList_Size(this)
+            LongArray(size.convert()) { i ->
+                PyList_GetItem(this, i.convert()).toKotlin()
+            }
+        }
+        ByteArray::class -> {
+            val size = PyBytes_Size(this)
+            PyBytes_AsString(this)!!.readBytes(size.convert())
         }
         List::class -> {
             val subType = type.arguments[0].type
@@ -72,6 +89,8 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
                 val pValue = PyDict_GetItem(this, key).toKotlinNullable(valueType) as? Any
                 map[pKey] = pValue
             }
+
+            map
         }
         Pair::class -> {
             val firstType = type.arguments[0].type
@@ -127,12 +146,34 @@ fun <T> T.toPython(type: KType) : PyObjectT {
             }
             list
         }
+        is DoubleArray -> {
+            val list = PyList_New(this.size.convert())
+            for (i in 0 until this.size) {
+                PyList_SetItem(list, i.convert(), this[i].toPython())
+            }
+            list
+        }
         is IntArray -> {
             val list = PyList_New(this.size.convert())
             for (i in 0 until this.size) {
                 PyList_SetItem(list, i.convert(), this[i].toPython())
             }
             list
+        }
+        is LongArray -> {
+            val list = PyList_New(this.size.convert())
+            for (i in 0 until this.size) {
+                PyList_SetItem(list, i.convert(), this[i].toPython())
+            }
+            list
+        }
+        is ByteArray -> {
+            memScoped {
+                val arr = allocArray<ByteVar>(this@toPython.size.convert())
+                val bytes = PyBytes_FromStringAndSize(null, this@toPython.size.convert())
+                memcpy(PyBytes_AsString(bytes)!!, arr, (sizeOf<ByteVar>() * this@toPython.size).convert())
+                bytes
+            }
         }
         is List<*> -> {
             val list = PyList_New(this.size.convert())
