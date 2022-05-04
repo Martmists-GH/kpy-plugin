@@ -23,9 +23,9 @@ open class KPyPlugin : Plugin<Project> {
     }
 
     private fun Project.setupSourceSets() {
-        kotlinExtension.apply {
-            targets.filterIsInstance<KotlinNativeTarget>().forEach {
-                afterEvaluate {
+        afterEvaluate {
+            kotlinExtension.apply {
+                targets.filterIsInstance<KotlinNativeTarget>().forEach {
                     sourceSets.getByName("${it.targetName}Main") {
                         kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${it.targetName}/${it.targetName}Main/kotlin")
 
@@ -55,9 +55,11 @@ open class KPyPlugin : Plugin<Project> {
             }
         }
 
-        dependencies.apply {
-            kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().forEach {
-                add("ksp${it.targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}")
+        afterEvaluate {
+            dependencies.apply {
+                kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().forEach {
+                    add("ksp${it.targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}")
+                }
             }
         }
     }
