@@ -2,6 +2,12 @@ name: Publish Snapshot
 
 on:
     push:
+        paths:
+            - '**.kt'
+            - '**.kts'
+            - '**.yaml'
+            - '**.py'
+            - '**.properties'
         branches:
             - master
 
