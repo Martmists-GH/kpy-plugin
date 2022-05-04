@@ -91,6 +91,13 @@ class KPyStubGenerator {
             write("import ${clazz.parent.declaration.packageName.asString()}.${clazz.parent.exportName.lowercase()} as ${clazz.parent.exportName.lowercase()}\n")
             "${clazz.parent.exportName.lowercase()}.${clazz.parent.exportName}"
         } else null
+        val doc = if (clazz.declaration.docString != null) {
+            "\n" + ("'''\n" +
+                    "${clazz.declaration.docString?.trim()}\n" +
+                    "'''\n\n").prependIndent(" ".repeat(4))
+        } else {
+            ""
+        }
 
         val constructorParams = clazz.declaration.primaryConstructor!!.parameters.withIndex().joinToString(", ") { remapParam(it.value, it.index) }
         val constructorParamsNoType = clazz.declaration.primaryConstructor!!.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
@@ -100,7 +107,7 @@ class KPyStubGenerator {
             |import _${name.split('.').first()}
             |from typing import Any, Dict, List, Optional, Tuple
             |
-            |class ${clazz.exportName}(_$name.${clazz.exportName}${superclass?.let { ", $it" } ?: ""}):
+            |class ${clazz.exportName}(_$name.${clazz.exportName}${superclass?.let { ", $it" } ?: ""}):$doc
             |    def __init__(self$constructorParamsComma):
             |       super().__init__($constructorParamsNoType)
             |
@@ -124,7 +131,7 @@ class KPyStubGenerator {
 
         val doc = if (function.declaration.docString != null) {
             "\n" + ("'''\n" +
-            "${function.declaration.docString}\n" +
+            "${function.declaration.docString?.trim()}\n" +
             "'''\n").prependIndent(" ".repeat(8))
         } else {
             ""
@@ -147,7 +154,7 @@ class KPyStubGenerator {
 
         val doc = if (function.declaration.docString != null) {
             "\n" + ("'''\n" +
-            "${function.declaration.docString}\n" +
+            "${function.declaration.docString?.trim()}\n" +
             "'''\n").prependIndent(" ".repeat(8))
         } else {
             ""
@@ -167,7 +174,7 @@ class KPyStubGenerator {
         val paramsNoType = function.declaration.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
         val doc = if (function.declaration.docString != null) {
             "\n" + ("'''\n" +
-                    "${function.declaration.docString}\n" +
+                    "${function.declaration.docString?.trim()}\n" +
                     "'''\n").prependIndent(" ".repeat(4))
         } else {
             ""

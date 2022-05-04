@@ -265,7 +265,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |}
             |
             |private val `${clazz.name}-${function.name}-kpy-def` = `${clazz.name}-${function.name}-kpy-fun`.pydef(
-            |    "${function.exportName}", "${docstring.replace("\"", "\\\"")}", ${if (nargs == 0) "METH_NOARGS" else "METH_VARARGS or METH_KEYWORDS"}
+            |    "${function.exportName}", "${docstring.replace("\"", "\\\"").replace("\n", "\\n")}", ${if (nargs == 0) "METH_NOARGS" else "METH_VARARGS or METH_KEYWORDS"}
             |)
             |
         """.trimMargin())
@@ -299,7 +299,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |    ${if (nargs == 0) bodyNoParams else bodyParams}
             |}
             |
-            |private val `${function.name}-kpy-def` = `${function.name}-kpy-fun`.pydef("${function.exportName}", "${docstring.replace("\"", "\\\"")}", ${if (nargs == 0) "METH_NOARGS" else "METH_VARARGS or METH_KEYWORDS"})
+            |private val `${function.name}-kpy-def` = `${function.name}-kpy-fun`.pydef("${function.exportName}", "${docstring.replace("\"", "\\\"").replace("\n", "\\n")}", ${if (nargs == 0) "METH_NOARGS" else "METH_VARARGS or METH_KEYWORDS"})
             |
         """.trimMargin())
     }

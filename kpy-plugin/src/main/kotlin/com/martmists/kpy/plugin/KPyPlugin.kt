@@ -14,9 +14,9 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.targets
 open class KPyPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
+            setupPlugins()
             setupExtensions()
             setupSourceSets()
-            setupPlugins()
             setupDependencies()
             setupTasks()
         }
@@ -85,9 +85,9 @@ open class KPyPlugin : Plugin<Project> {
     private fun Project.setupExtensions() {
         val ext = extensions.create<KPyExtension>("kpy")
 
-        extensions.getByType(KspExtension::class.java).apply {
-            arg("projectName", name)
-            afterEvaluate {
+        afterEvaluate {
+            extensions.getByType(KspExtension::class.java).apply {
+                arg("projectName", name)
                 arg("generateStubs", "${ext.generateStubs}")
             }
         }

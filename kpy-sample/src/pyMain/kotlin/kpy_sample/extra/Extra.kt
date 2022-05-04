@@ -10,6 +10,9 @@ import python.PyObject_GenericGetAttr
 
 @PyExport
 open class Extra(private val x: Int) {
+    /**
+     * return the value of x
+     */
     @PyExport("x")
     fun getX(): Int {
         return x
