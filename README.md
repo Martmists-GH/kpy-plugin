@@ -61,7 +61,7 @@ Use the following setup.py template:
 
 ```python
 from platform import system
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 from subprocess import Popen, PIPE
 
 osname = system()
