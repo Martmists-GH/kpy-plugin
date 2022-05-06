@@ -5,7 +5,6 @@ import com.google.devtools.ksp.gradle.KspGradleSubplugin
 import com.martmists.kpy.cfg.BuildConfig
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.kotlin.dsl.*
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -66,14 +65,14 @@ open class KPyPlugin : Plugin<Project> {
 
     private fun Project.setupTasks() {
         // Provide setup.py metadata
-        task<Task>("setupMetadata") {
-            actions.add {
-                val target = kotlinExtension.targets.first { it is KotlinNativeTarget } as KotlinNativeTarget
+        tasks.register("setupMetadata") {
+            doLast {
+                val target = kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first()
                 val ext = project.the<KPyExtension>()
                 println("""
                     |===METADATA START===
-                    |project_name = "$name"
-                    |project_version = "$version"
+                    |project_name = "${project.name}"
+                    |project_version = "${project.version}"
                     |build_dir = "${buildDir.absolutePath}"
                     |target = "${target.targetName}"
                     |has_stubs = ${if (ext.generateStubs) "True" else "False"}
