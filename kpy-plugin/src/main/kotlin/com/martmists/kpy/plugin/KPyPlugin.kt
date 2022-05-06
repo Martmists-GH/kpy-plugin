@@ -75,7 +75,7 @@ open class KPyPlugin : Plugin<Project> {
                     |project_name = "$name"
                     |project_version = "$version"
                     |build_dir = "${buildDir.absolutePath}"
-                    |bin_dir = "${buildDir.absolutePath}/bin/${target.targetName}"
+                    |target = "${target.targetName}"
                     |has_stubs = ${if (ext.generateStubs) "True" else "False"}
                     ${ext.props.map { (key, value) -> "|$key = $value" }.joinToString { "\n" }}
                     |===METADATA END===
