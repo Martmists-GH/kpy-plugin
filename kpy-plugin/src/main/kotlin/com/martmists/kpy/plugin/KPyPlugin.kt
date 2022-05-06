@@ -69,7 +69,7 @@ open class KPyPlugin : Plugin<Project> {
         task<Task>("setupMetadata") {
             actions.add {
                 val target = kotlinExtension.targets.first { it is KotlinNativeTarget } as KotlinNativeTarget
-                val ext = the<KPyExtension>()
+                val ext = project.the<KPyExtension>()
                 println("""
                     |===METADATA START===
                     |project_name = "$name"
