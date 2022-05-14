@@ -98,6 +98,13 @@ class KPyStubGenerator {
         } else {
             ""
         }
+        val props = if (clazz.properties.isNotEmpty()) {
+            "\n" + clazz.properties.joinToString {
+                "${it.name}: ${remapType(it.declaration.type.resolve())}".prependIndent(" ".repeat(4))
+            } + "\n"
+        } else {
+            ""
+        }
 
         val constructorParams = clazz.declaration.primaryConstructor!!.parameters.withIndex().joinToString(", ") { remapParam(it.value, it.index) }
         val constructorParamsNoType = clazz.declaration.primaryConstructor!!.parameters.withIndex().joinToString(", ") { it.value.name?.asString() ?: "arg${it.index}" }
@@ -107,7 +114,7 @@ class KPyStubGenerator {
             |import _${name.split('.').first()}
             |from typing import Any, Dict, List, Optional, Tuple
             |
-            |class ${clazz.exportName}(_$name.${clazz.exportName}${superclass?.let { ", $it" } ?: ""}):$doc
+            |class ${clazz.exportName}(_$name.${clazz.exportName}${superclass?.let { ", $it" } ?: ""}):$doc$props
             |    def __init__(self$constructorParamsComma):
             |       super().__init__($constructorParamsNoType)
             |

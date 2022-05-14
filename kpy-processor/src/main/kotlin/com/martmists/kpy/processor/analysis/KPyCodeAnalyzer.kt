@@ -6,6 +6,7 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.martmists.kpy.processor.collected.KPyClass
 import com.martmists.kpy.processor.collected.KPyFunction
+import com.martmists.kpy.processor.collected.KPyProperty
 
 class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator: CodeGenerator) {
     fun collect(resolver: Resolver) : KPyModuleCache {
@@ -54,6 +55,12 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
             }
         }
 
+        val props = getAllProperties().filter {
+            it.parentDeclaration == this && it.annotations.any {
+                it.shortName.asString() == "PyHint"
+            }
+        }
+
         val parent = this.getAllSuperTypes().firstOrNull() {
             val decl = it.declaration
             decl is KSClassDeclaration &&
@@ -70,7 +77,8 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
             this,
             parentType,
             funcs.map { it.asKPy() }.toMutableList(),
-            magic.map { it.asKPyMagic() }.toMutableList()
+            magic.map { it.asKPyMagic() }.toMutableList(),
+            props.map { it.asKPyProperty() }.toMutableList(),
         )
     }
 
@@ -86,6 +94,13 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
         return KPyFunction(
             simpleName.asString(),
             getMagicName() ?: simpleName.getShortName(),
+            this
+        )
+    }
+
+    private fun KSPropertyDeclaration.asKPyProperty() : KPyProperty {
+        return KPyProperty(
+            simpleName.asString(),
             this
         )
     }

@@ -9,4 +9,5 @@ data class KPyClass(
     val parent: KPyClass?,
     val functions: MutableList<KPyFunction> = mutableListOf(),
     val magic: MutableList<KPyFunction> = mutableListOf(),
+    val properties: MutableList<KPyProperty> = mutableListOf(),
 )

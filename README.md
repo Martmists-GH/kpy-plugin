@@ -29,7 +29,7 @@ Enable the plugin in your build.gradle.kts file:
 ```kotlin
 plugins {
     kotlin("multiplatform") version "1.6.21"  // current compatible version
-    id("com.martmists.kpy.kpy-plugin") version "0.2.7"  // Requires Gradle 7.5+
+    id("com.martmists.kpy.kpy-plugin") version "0.2.8"  // Requires Gradle 7.5+
 }
 
 kotlin {
@@ -74,11 +74,13 @@ else:
 
 # Build the project
 proc = Popen([gradle_bin, "build"])
-proc.wait()
+if proc.wait() != 0:
+    raise Exception("Build failed")
 
 # Fetch configuration from gradle task
 proc = Popen([gradle_bin, "setupMetadata"], stdout=PIPE)
-proc.wait()
+if proc.wait() != 0:
+    raise Exception("Failed to fetch metadata")
 output = proc.stdout.read().decode()
 real_output = output.split("===METADATA START===")[1].split("===METADATA END===")[0]
 

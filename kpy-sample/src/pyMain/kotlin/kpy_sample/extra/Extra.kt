@@ -1,5 +1,6 @@
 package kpy_sample.extra
 
+import kpy.annotations.PyHint
 import kpy.annotations.PyExport
 import kpy.annotations.PyMagic
 import kpy.annotations.PyMagicMethod
@@ -10,6 +11,9 @@ import python.PyObject_GenericGetAttr
 
 @PyExport
 open class Extra(private val x: Int) {
+    @PyHint
+    val someProp: FloatArray? = null
+
     /**
      * return the value of x
      */

@@ -7,8 +7,9 @@ data class KPyModule(
     val name: String,
     val classes: MutableList<KPyClass> = mutableListOf(),
     val functions: MutableList<KPyFunction> = mutableListOf(),
+    val properties: MutableList<KPyProperty> = mutableListOf(),
     val children: MutableList<KPyModule> = mutableListOf(),
-    val hooks: MutableList<KSFunctionDeclaration> = mutableListOf()
+    val hooks: MutableList<KSFunctionDeclaration> = mutableListOf(),
 ) {
     val key = name.split(".").last()
 
