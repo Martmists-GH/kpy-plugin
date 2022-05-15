@@ -21,7 +21,7 @@ repositories {
 
 allprojects {
     group = "com.martmists.kpy"
-    version = "0.2.8"
+    version = "0.2.9"
 
     tasks.withType<DependencyUpdatesTask> {
         fun isNonStable(version: String): Boolean {

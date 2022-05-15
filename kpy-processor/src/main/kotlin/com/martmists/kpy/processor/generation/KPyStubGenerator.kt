@@ -99,7 +99,7 @@ class KPyStubGenerator {
             ""
         }
         val props = if (clazz.properties.isNotEmpty()) {
-            "\n" + clazz.properties.joinToString {
+            "\n" + clazz.properties.joinToString("\n") {
                 "${it.name}: ${remapType(it.declaration.type.resolve())}".prependIndent(" ".repeat(4))
             } + "\n"
         } else {
