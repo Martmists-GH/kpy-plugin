@@ -30,7 +30,7 @@ open class KPyPlugin : Plugin<Project> {
 
                         val extension = the<KPyExtension>()
                         dependencies {
-                            implementation("com.martmists.kpy:kpy-library:${BuildConfig.VERSION}+${extension.pyVersion}")
+                            implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion}+${extension.pyVersion}")
                         }
                     }
                 }
@@ -51,13 +51,15 @@ open class KPyPlugin : Plugin<Project> {
             maven {
                 name = "KPy Repository"
                 setUrl("https://maven.martmists.com/releases/")
+                setUrl("https://maven.martmists.com/snapshots/")
             }
         }
 
         afterEvaluate {
             dependencies.apply {
+                val extension = the<KPyExtension>()
                 kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().forEach {
-                    add("ksp${it.targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${BuildConfig.VERSION}")
+                    add("ksp${it.targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion}")
                 }
             }
         }

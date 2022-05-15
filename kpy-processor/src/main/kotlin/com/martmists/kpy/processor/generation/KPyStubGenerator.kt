@@ -268,7 +268,7 @@ class KPyStubGenerator {
             it == "Long" -> "int"
             it == "Float" -> "float"
             it == "Double" -> "float"
-            it == "Bool" -> "bool"
+            it == "Boolean" -> "bool"
             it == "String" -> "str"
             it == "Unit" -> "None"
 
