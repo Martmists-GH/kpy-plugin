@@ -26,6 +26,14 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
                         module.functions.add(it.asKPy())
                     }
                 }
+
+                is KSPropertyDeclaration -> {
+                    // class members are still included here, filter them out
+                    if (it.parentDeclaration == null) {
+                        val module = modules[it.packageName.asString()]
+                        module.properties.add(it.asKPyProperty())
+                    }
+                }
             }
         }
 
@@ -98,9 +106,10 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
         )
     }
 
-    private fun KSPropertyDeclaration.asKPyProperty() : KPyProperty {
+    private fun KSPropertyDeclaration.asKPyProperty(): KPyProperty {
         return KPyProperty(
             simpleName.asString(),
+            getExportName() ?: simpleName.asString(),
             this
         )
     }

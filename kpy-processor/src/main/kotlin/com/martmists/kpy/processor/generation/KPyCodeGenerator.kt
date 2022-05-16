@@ -78,9 +78,10 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |
             |fun createModule() : PyObjectT {
             |    val obj = PyModule_Create2(mod.ptr, PYTHON_API_VERSION)
-            |    ${module.hooks.joinToString("\n") { "${it.simpleName.asString()}(obj)" }}
-            |    ${module.classes.joinToString("\n") { "if (obj.addType(KPyType_${it.exportName}) < 0) return null" }}
-            |    ${module.children.joinToString("\n") { "if (PyModule_AddObject(obj, \"${it.key}\", ${it.name}.createModule().incref()) < 0) return null" }}
+            |    ${module.properties.joinToString("\n    ") { "val `${it.name}-kpy` = ${it.name}.toPython(); if (PyModule_AddObject(obj, \"${it.exportName}\", `${it.name}-kpy`) < 0) { `${it.name}-kpy`.decref(); return null }" }}
+            |    ${module.hooks.joinToString("\n    ") { "${it.simpleName.asString()}(obj)" }}
+            |    ${module.classes.joinToString("\n    ") { "if (obj.addType(KPyType_${it.exportName}) < 0) return null" }}
+            |    ${module.children.joinToString("\n    ") { "if (PyModule_AddObject(obj, \"${it.key}\", ${it.name}.createModule().incref()) < 0) return null" }}
             |    return obj
             |}
             |

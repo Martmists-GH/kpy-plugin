@@ -3,6 +3,6 @@ package kpy.annotations
 /**
  * Export the annotated function/class/method
  */
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
 annotation class PyExport(val name: String = "")

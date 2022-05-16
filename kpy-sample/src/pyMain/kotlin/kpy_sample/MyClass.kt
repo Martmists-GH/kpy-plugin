@@ -39,6 +39,9 @@ fun testFunction(x: Int) : Int {
     return x shr 1
 }
 
+@PyExport
+val myString = "Hello, world!"
+
 @PyModuleHook
 fun hook(obj: PyObjectT) {
     val name = PyModule_GetName(obj)!!.toKString()

@@ -8,6 +8,7 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.martmists.kpy.processor.collected.KPyClass
 import com.martmists.kpy.processor.collected.KPyFunction
 import com.martmists.kpy.processor.collected.KPyModule
+import com.martmists.kpy.processor.collected.KPyProperty
 import java.io.OutputStreamWriter
 
 class KPyStubGenerator {
@@ -57,6 +58,30 @@ class KPyStubGenerator {
                     }
                 }
             }
+
+            if (module.properties.isNotEmpty()) {
+                createNewFile(
+                    Dependencies(true, *module.files().toTypedArray()),
+                    module.name,
+                    "properties",
+                    "py"
+                ).use { stream ->
+                    OutputStreamWriter(stream).use {
+                        with(it) {
+                            write("""
+                                |import _${module.name}
+                                |from typing import Any, Dict, List, Optional, Tuple
+                                |
+                                |
+                            """.trimMargin())
+
+                            for (property in module.properties) {
+                                generate(property)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         createNewFile(Dependencies(true, *module.files().toTypedArray()), module.name, "__init__", "py").use { stream ->
@@ -78,6 +103,9 @@ class KPyStubGenerator {
         }
         if (module.functions.isNotEmpty()) {
             write("from .functions import ${module.functions.joinToString(", ") { it.exportName }}\n")
+        }
+        if (module.properties.isNotEmpty()) {
+            write("from .properties import ${module.properties.joinToString(", ") { it.exportName }}\n")
         }
 
         val allObjects = module.children.map { it.key } + module.classes.map { it.exportName } + module.functions.map { it.exportName }
@@ -193,6 +221,11 @@ class KPyStubGenerator {
             |
             |
         """.trimMargin())
+    }
+
+    context(KPyModule, OutputStreamWriter)
+    private fun generate(property: KPyProperty) {
+        write("${property.exportName}: ${remapType(property.declaration.type.resolve())} = _${name}.${property.exportName}\n")
     }
 
     private fun transformMagic(name: String): String {
