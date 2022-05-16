@@ -11,11 +11,11 @@ The KPy gradle plugin allows you to write kotlin/native code and use it from pyt
 - Conversions handled mostly automatically
 - Class inheritance mapped to python
 - Generate Python stubs
+- Catch Kotlin exceptions and raise them as Python exceptions
 
 ### Planned
 
 - Map enum classes to Python enums
-- Catch Kotlin exceptions and raise them as Python exceptions
 - Vararg support
 - Generics?
 
@@ -29,7 +29,7 @@ Enable the plugin in your build.gradle.kts file:
 ```kotlin
 plugins {
     kotlin("multiplatform") version "1.6.21"  // current compatible version
-    id("com.martmists.kpy.kpy-plugin") version "0.2.9"  // Requires Gradle 7.5+
+    id("com.martmists.kpy.kpy-plugin") version "0.3.0"  // Requires Gradle 7.5+
 }
 
 kotlin {

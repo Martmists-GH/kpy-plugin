@@ -108,7 +108,7 @@ class KPyStubGenerator {
             write("from .properties import ${module.properties.joinToString(", ") { it.exportName }}\n")
         }
 
-        val allObjects = module.children.map { it.key } + module.classes.map { it.exportName } + module.functions.map { it.exportName }
+        val allObjects = module.children.map { it.key } + module.classes.map { it.exportName } + module.functions.map { it.exportName } + module.properties.map { it.exportName }
 
         write(allObjects.joinToString(" ", "\n__all__ = (", ")\n") { "'$it'," })
     }

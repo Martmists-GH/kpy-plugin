@@ -154,27 +154,37 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
 
         val constructor = clazz.declaration.primaryConstructor!!
         val implBody = if (constructor.parameters.isNotEmpty()) """
-            |memScoped {
-            |        val selfObj: CPointer<KtPyObject> = self?.reinterpret() ?: return@memScoped -1
-            |        ${parseArgs("__init__", constructor)}
-            |
-            |        val instance = ${clazz.name}(
-            |            ${params(constructor.parameters.map { it.type.resolve().isMarkedNullable })}
-            |        )
-            |        val ref = StableRef.create(instance)
-            |        selfObj.pointed.ktObject = ref.asCPointer()
-            |        self.remember(instance)
-            |        0
+            |try {
+            |        memScoped {
+            |            val selfObj: CPointer<KtPyObject> = self?.reinterpret() ?: return@memScoped -1
+            |            ${parseArgs("__init__", constructor)}
+            |    
+            |            val instance = ${clazz.name}(
+            |                ${params(constructor.parameters.map { it.type.resolve().isMarkedNullable })}
+            |            )
+            |            val ref = StableRef.create(instance)
+            |            selfObj.pointed.ktObject = ref.asCPointer()
+            |            self.remember(instance)
+            |            0
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        -1
             |    }
             |
         """.trimMargin() else """
-            |memScoped {
-            |        val selfObj: CPointer<KtPyObject> = self?.reinterpret() ?: return@memScoped -1
-            |        val instance = ${clazz.name}()
-            |        val ref = StableRef.create(instance)
-            |        selfObj.pointed.ktObject = ref.asCPointer()
-            |        self.remember(instance)
-            |        0
+            |try {
+            |        memScoped {
+            |            val selfObj: CPointer<KtPyObject> = self?.reinterpret() ?: return@memScoped -1
+            |            val instance = ${clazz.name}()
+            |            val ref = StableRef.create(instance)
+            |            selfObj.pointed.ktObject = ref.asCPointer()
+            |            self.remember(instance)
+            |            0
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        -1
             |    }
             |
         """.trimMargin()
@@ -249,19 +259,24 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
 
         val body = if (nargs != 0) """
             |${parseArgs(function.exportName, function.declaration)}
-            |        val result = selfKt.${function.name}(
-            |            ${params(params.map { it.type.resolve().isMarkedNullable })}
-            |        )
+            |            val result = selfKt.${function.name}(
+            |                ${params(params.map { it.type.resolve().isMarkedNullable })}
+            |            )
         """.trimMargin() else """
             |val result = selfKt.${function.name}()
         """.trimMargin()
 
         write("""
             |private val `${clazz.name}-${function.name}-kpy-fun` = staticCFunction { self: PyObjectT, args: PyObjectT, kwargs: PyObjectT ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        $body
-            |        result.toPython().incref()
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            $body
+            |            result.toPython().incref()
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        null
             |    }
             |}
             |
@@ -297,7 +312,12 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
 
         write("""
             |private val `${function.name}-kpy-fun` = staticCFunction { self: PyObjectT, args: PyObjectT, kwargs: PyObjectT ->
-            |    ${if (nargs == 0) bodyNoParams else bodyParams}
+            |    try {
+            |        ${if (nargs == 0) bodyNoParams else bodyParams}
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        null
+            |    } 
             |}
             |
             |private val `${function.name}-kpy-def` = `${function.name}-kpy-fun`.pydef("${function.exportName}", "${docstring.replace("\"", "\\\"").replace("\n", "\\n")}", ${if (nargs == 0) "METH_NOARGS" else "METH_VARARGS or METH_KEYWORDS"})
@@ -350,10 +370,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateUnaryfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}()
-            |        result.toPython().incref()
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}()
+            |            result.toPython().incref()
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        null
             |    }
             |}
             |
@@ -364,10 +389,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateBinaryfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}(arg.toKotlin())
-            |        result.toPython().incref()
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}(arg.toKotlin())
+            |            result.toPython().incref()
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        null
             |    }
             |}
             |
@@ -378,10 +408,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateTernaryfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT, arg2: PyObjectT ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}(arg.toKotlin(), arg2.toKotlin())
-            |        result.toPython().incref()
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}(arg.toKotlin(), arg2.toKotlin())
+            |            result.toPython().incref()
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        null
             |    }
             |}
             |
@@ -406,10 +441,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateRichcmpfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT, arg2: Int ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}(arg.toKotlin(), arg2)
-            |        result.toPython().incref()
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}(arg.toKotlin(), arg2)
+            |            result.toPython().incref()
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        null
             |    }
             |}
             |
@@ -434,10 +474,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateLenfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}()
-            |        result.convert<Py_ssize_t>()
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}()
+            |            result.convert<Py_ssize_t>()
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        (-1).convert<Py_ssize_t>()
             |    }
             |}
             |
@@ -448,10 +493,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateObjobjargproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT, arg2: PyObjectT ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}(arg.toKotlin(), arg2.toKotlin())
-            |        result
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}(arg.toKotlin(), arg2.toKotlin())
+            |            result
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        -1
             |    }
             |}
             |
@@ -462,10 +512,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateSsizeargfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: Py_ssize_t ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}(arg.convert())
-            |        result.toPython().incref()
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}(arg.convert())
+            |            result.toPython().incref()
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        null
             |    }
             |}
             |
@@ -476,10 +531,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateSsizeobjargproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: Py_ssize_t ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}(arg.convert())
-            |        result
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}(arg.convert())
+            |            result
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        -1
             |    }
             |}
             |
@@ -490,10 +550,15 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateObjobjproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT ->
-            |    memScoped {
-            |        val selfKt = self!!.kt.cast<${clazz.name}>()
-            |        val result = selfKt.${function.name}(arg.toKotlin())
-            |        result
+            |    try {
+            |        memScoped {
+            |            val selfKt = self!!.kt.cast<${clazz.name}>()
+            |            val result = selfKt.${function.name}(arg.toKotlin())
+            |            result
+            |        }
+            |    } catch (e: Throwable) {
+            |        PyErr_SetString(PyExc_Exception, e.toString())
+            |        -1
             |    }
             |}
             |
