@@ -51,6 +51,9 @@ open class KPyPlugin : Plugin<Project> {
             maven {
                 name = "KPy Repository"
                 setUrl("https://maven.martmists.com/releases/")
+            }
+            maven {
+                name = "KPy Repository"
                 setUrl("https://maven.martmists.com/snapshots/")
             }
         }
