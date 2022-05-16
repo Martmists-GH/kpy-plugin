@@ -57,7 +57,7 @@ open class KPyPlugin : Plugin<Project> {
 
         afterEvaluate {
             dependencies.apply {
-                val extension = the<KPyExtension>()
+                val extension = project.the<KPyExtension>()
                 kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().forEach {
                     add("ksp${it.targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion}")
                 }
