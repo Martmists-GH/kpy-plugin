@@ -88,7 +88,7 @@ val generatePythonDef = tasks.create<Exec>("generatePythonDef") {
 
     group = "interop"
     description = "Generate Python.def file"
-    executable = "python3"
+    executable = "python"
 
     val cinteropDir = "${project.projectDir.absolutePath}/src/nativeInterop/cinterop"
     val parts = minPyVersion.split(".").toMutableList()

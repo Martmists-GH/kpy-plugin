@@ -131,7 +131,7 @@ inline fun <reified T> T.toPython() = toPython(typeOf<T>())
 @Suppress("UNNECESSARY_NOT_NULL_ASSERTION")  // False positive
 fun <T> T.toPython(type: KType) : PyObjectT {
     return when (this) {
-        null -> null
+        null -> Py_None
         is Unit -> Py_None
         is Int -> PyLong_FromLong(this.convert())
         is Long -> PyLong_FromLong(this.convert())

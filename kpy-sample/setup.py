@@ -1,3 +1,4 @@
+from os.path import dirname, join
 from platform import system
 from setuptools import setup, Extension, find_packages
 from subprocess import Popen, PIPE
@@ -5,10 +6,11 @@ from subprocess import Popen, PIPE
 osname = system()
 debug = True
 
-if osname == "Linux":
-    gradle_bin = "../gradlew"
+dirname = dirname(__file__)
+if osname == "Linux" or osname == "Darwin":
+    gradle_bin = join(dirname, '../gradlew')
 else:
-    gradle_bin = "../gradlew.bat"
+    gradle_bin = join(dirname, '..\\gradlew.bat')
 
 # Build the project
 proc = Popen([gradle_bin, "build"])
@@ -49,7 +51,7 @@ with open("README.md", "r") as fh:
 attrs = {}
 
 if has_stubs:
-    stub_root = f'{build_dir}/generated/ksp/{target}/{target}Main/resources/'
+    stub_root = f'{build_dir}/generated/ksp/{target}/{target}Main/resources'
     attrs["packages"] = find_packages(where=stub_root)
     attrs["package_dir"] = {"": stub_root}
 else:

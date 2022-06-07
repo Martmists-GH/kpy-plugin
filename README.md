@@ -1,6 +1,8 @@
 # KPy Plugin
 
-The KPy gradle plugin allows you to write kotlin/native code and use it from python.
+The KPy gradle plugin allows you to write Kotlin/Native code and use it from python.
+
+> Note: Modules built with KPy still require XCode when building on macOS, this is a Kotlin/Native limitation.
 
 ## Features
 
@@ -20,8 +22,6 @@ The KPy gradle plugin allows you to write kotlin/native code and use it from pyt
 - Generics?
 
 ## Setup
-
-> Note: The plugin is not yet publicly available, see kpy-sample as reference for now.
 
 Change your gradle version to 7.5 (nightly builds only as of writing)
 Enable the plugin in your build.gradle.kts file:
@@ -67,10 +67,10 @@ from subprocess import Popen, PIPE
 osname = system()
 debug = True
 
-if osname == "Linux":
+if osname == "Linux" or osname == "Darwin":
     gradle_bin = "./gradlew"
 else:
-    gradle_bin = "./gradlew.bat"
+    gradle_bin = ".\\gradlew.bat"
 
 # Build the project
 proc = Popen([gradle_bin, "build"])
@@ -111,7 +111,7 @@ with open("README.md", "r") as fp:
 attrs = {}
 
 if has_stubs:
-    stub_root = f'{build_dir}/generated/ksp/{target}/{target}Main/resources/'
+    stub_root = f'{build_dir}/generated/ksp/{target}/{target}Main/resources'
     attrs["packages"] = find_packages(where=stub_root)
     attrs["package_dir"] = {"": stub_root}
 else:
