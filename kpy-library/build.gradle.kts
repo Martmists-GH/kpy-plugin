@@ -65,7 +65,7 @@ kotlin {
 
             }
             val python by main.cinterops.creating {
-                if (konanTarget != hostTarget && konanTarget == KonanTarget.MINGW_X64) {
+                if (konanTarget == KonanTarget.MINGW_X64) {
                     defFile = project.file("src/nativeInterop/cinterop/python-github-MingwX64.def")
                 }
             }
@@ -122,20 +122,17 @@ struct KtPyObject {{
     void* ktObject;
 }};
 
-// Wrapper func for _PyUnicode_AsString macro
-char* PyUnicode_AsString(PyObject* obj) {{
+    char* PyUnicode_AsString(PyObject* obj) {{
     return _PyUnicode_AsString(obj);
 }}
 '''.strip()
 
-body = template.format(
-    INCLUDE_DIR=paths['platinclude'],
-    LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
-    MIN_VERSION_HEX='0x${versionHex}'
-)
 with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
-    if win32_edition() is not None:
-        body = body.replace('/', '\\')
+    body = template.format(
+        INCLUDE_DIR=paths['platinclude'],
+        LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
+        MIN_VERSION_HEX='0x${versionHex}'
+    )
     fp.write(body)
     print('${cinteropDir.replace('\\', '/')}/python.def\n' + body)
 
@@ -145,6 +142,8 @@ with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') a
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
     )
+    if win32_edition() is not None:
+        body = body.replace('/', '\\')
     fp.write(body)
     print('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def\n' + body)
         """.trim()
