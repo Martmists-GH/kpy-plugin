@@ -131,7 +131,7 @@ with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
     print(body)
 with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') as fp:
     body = template.format(
-        INCLUDE_DIR='mingw64/include/python${pyVersion}',
+        INCLUDE_DIR='${project.projectDir.absolutePath}/mingw64/include/python${pyVersion}',
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
     )
