@@ -17,18 +17,20 @@ kotlin {
         else -> error("Unsupported host OS: $hostOs")
     }
 
-    fun KotlinNativeTarget.win() = if (isMingwX64) null else this
+    fun KotlinNativeTarget.disableWin() = if (isMingwX64) null else this
+    fun KotlinNativeTarget.disableLinux() = if (hostTarget == KonanTarget.LINUX_X64) null else this
+    fun KotlinNativeTarget.disableMac() = if (hostTarget == KonanTarget.MACOS_X64) null else this
 
     val targets = listOf(
         // X64
         mingwX64(),
 
-        linuxX64().win(),
-        macosX64().win(),
+        linuxX64().disableWin(),
+        macosX64().disableWin(),
 
         // Arm
-        linuxArm64().win(),
-        macosArm64().win(),
+        linuxArm64().disableWin(),
+        macosArm64().disableWin(),
     ).filterNotNull()
 
     sourceSets {
@@ -156,8 +158,11 @@ with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') a
 
 for (target in listOf("LinuxX64", "MacosX64", "MingwX64", "LinuxArm64", "MacosArm64")) {
     try {
-        tasks.getByName("cinteropPython${target}") {
+        val interop = tasks.getByName("cinteropPython${target}") {
             dependsOn(generatePythonDef)
+        }
+        tasks.named("generateProjectStructureMetadata") {
+            dependsOn(interop)
         }
     } catch (e: Exception) {
         println("Skipping cinteropPython${target} as it's not available on this OS")
