@@ -101,6 +101,7 @@ val generatePythonDef = tasks.create<Exec>("generatePythonDef") {
         "-c",
         """
 import sysconfig
+from platform import win32_edition
 paths = sysconfig.get_paths()
 template = '''
 headers = Python.h
@@ -121,14 +122,17 @@ char* PyUnicode_AsString(PyObject* obj) {{
 }}
 '''.strip()
 
+body = template.format(
+    INCLUDE_DIR=paths['platinclude'],
+    LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
+    MIN_VERSION_HEX='0x${versionHex}'
+)
 with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
-    body = template.format(
-        INCLUDE_DIR=paths['platinclude'],
-        LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
-        MIN_VERSION_HEX='0x${versionHex}'
-    )
+    if win32_edition() is not None:
+        body = body.replace('/', '\\')
     fp.write(body)
-    print(body)
+    print('${cinteropDir.replace('\\', '/')}/python.def\n' + body)
+
 with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') as fp:
     body = template.format(
         INCLUDE_DIR='${project.projectDir.absolutePath}/mingw64/include/python${pyVersion}',
@@ -136,11 +140,12 @@ with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') a
         MIN_VERSION_HEX='0x${versionHex}'
     )
     fp.write(body)
-    print(body)
+    print('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def\n' + body)
         """.trim()
     )
     files(
         "${cinteropDir.replace('\\', '/')}/python.def",
+        "${cinteropDir.replace('\\', '/')}/python-windows.def",
         "${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def",
     )
 }
