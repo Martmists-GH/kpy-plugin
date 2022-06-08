@@ -42,8 +42,8 @@ jobs:
 
             # Note: grep installs as ggrep on macos
             - shell: bash
-              name: Download msys2 python headers
-              if: ${{ matrix.os }} == 'macos-latest'
+              name: Download msys2 python headers (macos)
+              if: matrix.os == 'macos-latest'
               run: |
                   brew install grep
                   wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | ggrep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
@@ -51,8 +51,8 @@ jobs:
               working-directory: kpy-library
 
             - shell: bash
-              name: Download msys2 python headers
-              if: ${{ matrix.os }} == 'ubuntu-latest'
+              name: Download msys2 python headers (ubuntu)
+              if: matrix.os == 'ubuntu-latest'
               run: |
                   wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | grep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
                   tar --use-compress-program=unzstd -xvf pkg.tar.zst
