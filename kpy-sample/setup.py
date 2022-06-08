@@ -2,6 +2,7 @@ from os.path import dirname, join
 from platform import system
 from setuptools import setup, Extension, find_packages
 from subprocess import Popen, PIPE
+from sys import version_info
 
 osname = system()
 debug = True
@@ -17,7 +18,7 @@ proc = Popen([gradle_bin, "build"])
 proc.wait()
 
 # Fetch configuration from gradle task
-proc = Popen([gradle_bin, "setupMetadata"], stdout=PIPE)
+proc = Popen([gradle_bin, f"-PpythonVersion={version_info[0]}.{version_info[1]}", "setupMetadata"], stdout=PIPE)
 proc.wait()
 output = proc.stdout.read().decode()
 real_output = output.split("===METADATA START===")[1].split("===METADATA END===")[0]
