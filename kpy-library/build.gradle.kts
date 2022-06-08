@@ -105,8 +105,8 @@ paths = sysconfig.get_paths()
 template = '''
 headers = Python.h
 package = python
-compilerOpts = -I'{INCLUDE_DIR}'
-linkerOpts = -L'{LIB_DIR}' -l python3
+compilerOpts = -I"{INCLUDE_DIR}"
+linkerOpts = -L"{LIB_DIR}" -l python3
 
 ---
 
