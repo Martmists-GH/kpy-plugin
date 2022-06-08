@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
@@ -7,17 +8,6 @@ plugins {
 }
 
 kotlin {
-    val targets = listOf(
-        // X64
-        linuxX64(),
-        mingwX64(),
-        macosX64(),
-
-        // Arm
-        linuxArm64(),
-        macosArm64(),
-    )
-
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
     val hostTarget = when {
@@ -26,6 +16,20 @@ kotlin {
         isMingwX64 -> KonanTarget.MINGW_X64
         else -> error("Unsupported host OS: $hostOs")
     }
+
+    fun KotlinNativeTarget.win() = if (isMingwX64) null else this
+
+    val targets = listOf(
+        // X64
+        mingwX64(),
+
+        linuxX64().win(),
+        macosX64().win(),
+
+        // Arm
+        linuxArm64().win(),
+        macosArm64().win(),
+    ).filterNotNull()
 
     sourceSets {
         val nativeMain by creating {
