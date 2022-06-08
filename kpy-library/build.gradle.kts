@@ -122,17 +122,21 @@ char* PyUnicode_AsString(PyObject* obj) {{
 '''.strip()
 
 with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
-    fp.write(template.format(
+    body = template.format(
         INCLUDE_DIR=paths['platinclude'],
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
-    ))
+    )
+    fp.write(body)
+    print(body)
 with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') as fp:
-    fp.write(template.format(
+    body = template.format(
         INCLUDE_DIR='mingw64/include/python${pyVersion}',
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
-    ))
+    )
+    fp.write(body)
+    print(body)
         """.trim()
     )
     files(
