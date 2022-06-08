@@ -105,8 +105,8 @@ paths = sysconfig.get_paths()
 template = '''
 headers = Python.h
 package = python
-compilerOpts = -I"{INCLUDE_DIR}"
-linkerOpts = -L"{LIB_DIR}" -l python3
+compilerOpts = -I'{INCLUDE_DIR}'
+linkerOpts = -L'{LIB_DIR}' -l python3
 
 ---
 
@@ -129,7 +129,7 @@ with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
     ))
 with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') as fp:
     fp.write(template.format(
-        INCLUDE_DIR="mingw64/include/python${pyVersion}",
+        INCLUDE_DIR='mingw64/include/python${pyVersion}',
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
     ))
