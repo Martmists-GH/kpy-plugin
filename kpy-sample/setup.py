@@ -14,7 +14,7 @@ else:
     gradle_bin = join(dirname, '..\\gradlew.bat')
 
 # Build the project
-proc = Popen([gradle_bin, "build"])
+proc = Popen([gradle_bin, f"-PpythonVersion={version_info[0]}.{version_info[1]}", "build"])
 proc.wait()
 
 # Fetch configuration from gradle task
