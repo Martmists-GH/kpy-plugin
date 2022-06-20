@@ -16,7 +16,7 @@ jobs:
   build-libraries:
     strategy:
       matrix:
-        python: [ '3.9', '3.10' ]
+        python: [ '3.10' ]
     runs-on: macos-latest
     steps:
       # Check out project
