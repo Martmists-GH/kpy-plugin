@@ -64,10 +64,10 @@ jobs:
           tar --use-compress-program=unzstd -xvf pkg.tar.zst
         working-directory: kpy-library
 
-      # Build all
-      - shell: bash
-        name: Build sample
-        run: python kpy-sample/setup.py install --user
+#      # Build all
+#      - shell: bash
+#        name: Build sample
+#        run: python kpy-sample/setup.py install --user
 
   build-libraries:
     strategy:
