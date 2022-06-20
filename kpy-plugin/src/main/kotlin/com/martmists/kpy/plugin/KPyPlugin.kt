@@ -30,7 +30,7 @@ open class KPyPlugin : Plugin<Project> {
 
                         val extension = the<KPyExtension>()
                         dependencies {
-                            implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion}+${extension.pyVersion}")
+                            implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion}+${extension.pyVersion.value}")
                         }
                     }
                 }
@@ -71,19 +71,23 @@ open class KPyPlugin : Plugin<Project> {
     private fun Project.setupTasks() {
         // Provide setup.py metadata
         tasks.register("setupMetadata") {
-            doLast {
-                val target = kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first()
-                val ext = project.the<KPyExtension>()
-                println("""
+            afterEvaluate {
+                actions.add {
+                    val target = kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first()
+                    val ext = project.the<KPyExtension>()
+                    println("""
                     |===METADATA START===
                     |project_name = "${project.name}"
                     |project_version = "${project.version}"
+                    |root_dir = "${rootDir.absolutePath}"
                     |build_dir = "${buildDir.absolutePath}"
                     |target = "${target.targetName}"
                     |has_stubs = ${if (ext.generateStubs) "True" else "False"}
                     ${ext.props.map { (key, value) -> "|$key = $value" }.joinToString { "\n" }}
                     |===METADATA END===
-                """.trimMargin())
+                    """.trimMargin()
+                    )
+                }
             }
         }
     }

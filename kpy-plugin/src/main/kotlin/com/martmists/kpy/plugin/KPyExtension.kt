@@ -7,7 +7,7 @@ open class KPyExtension {
 
     // Version to target
     // Supported: [3.10]
-    var pyVersion: String = "3.10"
+    var pyVersion: PythonVersion = PythonVersion.Py310
     var kpyVersion: String = BuildConfig.VERSION
 
     // Generates the native code under _{name} and adds python stubs
