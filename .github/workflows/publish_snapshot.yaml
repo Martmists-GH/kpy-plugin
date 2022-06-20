@@ -42,9 +42,9 @@ jobs:
           key: ${{ runner.os }}-konan
 
       # Set up python
-      -   uses: actions/setup-python@v3
-          with:
-            python-version: ${{ matrix.python }}
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
 
       # Note: grep installs as ggrep on macos
       - shell: bash
