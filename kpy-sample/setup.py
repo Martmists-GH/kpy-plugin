@@ -24,6 +24,13 @@ output = proc.stdout.read().decode()
 real_output = output.split("===METADATA START===")[1].split("===METADATA END===")[0]
 
 exec(real_output, globals(), locals())
+# Types of variables from gradle metadata
+has_stubs: bool
+project_name: str
+project_version: str
+build_dir: str
+root_dir: str
+target: str
 
 print("name: " + project_name)
 print("version: " + project_version)
