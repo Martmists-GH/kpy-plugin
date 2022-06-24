@@ -4,6 +4,8 @@ The KPy gradle plugin allows you to write Kotlin/Native code and use it from pyt
 
 > Note: Modules built with KPy still require XCode when building on macOS, this is a Kotlin/Native limitation.
 
+For issues and future plans, refer to the [KPy YouTrack](https://youtrack.martmists.com/issues/KPY)
+
 ## Features
 
 ### Implemented
@@ -14,12 +16,6 @@ The KPy gradle plugin allows you to write Kotlin/Native code and use it from pyt
 - Class inheritance mapped to python
 - Generate Python stubs
 - Catch Kotlin exceptions and raise them as Python exceptions
-
-### Planned
-
-- Map enum classes to Python enums
-- Vararg support
-- Generics?
 
 ## Setup
 
@@ -60,12 +56,14 @@ kotlin {
 Use the following setup.py template:
 
 ```python
+from os.path import dirname, abspath
 from platform import system
 from setuptools import setup, Extension, find_packages
 from subprocess import Popen, PIPE
 
 osname = system()
 debug = True
+dir_name = dirname(abspath(__file__))
 
 if osname == "Linux" or osname == "Darwin":
     gradle_bin = "./gradlew"
@@ -86,7 +84,16 @@ real_output = output.split("===METADATA START===")[1].split("===METADATA END==="
 
 # Apply the configuration
 exec(real_output, globals(), locals())
+has_stubs: bool
+project_name: str
+project_version: str
+build_dir: str
+root_dir: str
+target: str
 
+# Prevent problems with multiple source roots, if able
+build_dir = build_dir[len(dir_name)+1:]
+root_dir = root_dir[len(dir_name)+1:]
 
 def snake_case(name):
     return name.replace("-", "_").lower()
