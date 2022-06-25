@@ -122,7 +122,7 @@ struct KtPyObject {{
     void* ktObject;
 }};
 
-    char* PyUnicode_AsString(PyObject* obj) {{
+char* PyUnicode_AsString(PyObject* obj) {{
     return _PyUnicode_AsString(obj);
 }}
 '''.strip()

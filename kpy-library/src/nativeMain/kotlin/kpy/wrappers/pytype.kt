@@ -10,13 +10,13 @@ val PyType_GenericAllocKt = staticCFunction { arg0: CPointer<PyTypeObject>?, arg
     return@staticCFunction PyType_GenericAlloc(arg0, arg1)
 }
 
-val PyType_GenericNewKt = staticCFunction { arg0: CPointer<PyTypeObject>?, arg1: CPointer<PyObject>?, arg2: CPointer<PyObject>? ->
+val PyType_GenericNewKt = staticCFunction { arg0: CPointer<PyTypeObject>?, arg1: PyObjectT, arg2: PyObjectT ->
     return@staticCFunction PyType_GenericNew(arg0, arg1, arg2)
 }
 
 
 // Default __del__ implementation
-val KtType_StableRefFree = staticCFunction { self: COpaquePointer? ->
+val KtType_StableRefFree = staticCFunction { self: PyObjectT ->
     val selfObj: CPointer<KtPyObject> = self?.reinterpret() ?: return@staticCFunction
     val ref = selfObj.pointed.ktObject?.asStableRef<Any>()
 
