@@ -16,7 +16,7 @@ val PyType_GenericNewKt = staticCFunction { arg0: CPointer<PyTypeObject>?, arg1:
 
 
 // Default __del__ implementation
-val KtType_StableRefFree = staticCFunction { self: PyObjectT ->
+val KtType_StableRefFree = staticCFunction { self: COpaquePointer? ->
     val selfObj: CPointer<KtPyObject> = self?.reinterpret() ?: return@staticCFunction
     val ref = selfObj.pointed.ktObject?.asStableRef<Any>()
 
