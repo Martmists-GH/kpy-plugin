@@ -18,7 +18,7 @@ dependencies {
     implementation(gradleKotlinDsl())
     implementation(kotlin("stdlib"))
     implementation(kotlin("gradle-plugin"))
-    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.7.0-1.0.6")
+    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.7.10-1.0.6")
 }
 
 pluginBundle {
