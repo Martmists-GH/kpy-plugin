@@ -1,4 +1,5 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
+import com.martmists.commons.isStable
 
 buildscript {
     extra["kotlin_plugin_id"] = "com.martmists.kpy-plugin"
@@ -24,15 +25,8 @@ allprojects {
     version = "0.4.0"
 
     tasks.withType<DependencyUpdatesTask> {
-        fun isNonStable(version: String): Boolean {
-            val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.toUpperCase().contains(it) }
-            val regex = "^[0-9,.v-]+(-r)?$".toRegex()
-            val isStable = stableKeyword || regex.matches(version)
-            return isStable.not()
-        }
-
         rejectVersionIf {
-            isNonStable(candidate.version) && !isNonStable(currentVersion)
+            isStable(currentVersion) && !isStable(candidate.version)
         }
     }
 }
@@ -43,5 +37,5 @@ subprojects {
         mavenCentral()
     }
 
-    buildDir = File(rootProject.buildDir.absolutePath + "/" + project.name)
+    buildDir = file(rootProject.buildDir.absolutePath + "/" + project.name)
 }

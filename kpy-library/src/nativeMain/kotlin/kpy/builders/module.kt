@@ -14,7 +14,7 @@ fun makeModule(
     km_free: freefunc? = null,
     km_clear: inquiry? = null,
     km_traverse: traverseproc? = null,
-): PyModuleDef = nativeHeap.alloc {
+): PyModuleDef = nativeHeap.alloc<PyModuleDef> {
     m_base.PyModuleDef_HEAD_INIT()
     m_name = makeString(km_name)
     m_methods = km_methods?.let {

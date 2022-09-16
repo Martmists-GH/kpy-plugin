@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
@@ -7,17 +8,6 @@ plugins {
 }
 
 kotlin {
-    val targets = listOf(
-        // X64
-        linuxX64(),
-        mingwX64(),
-        macosX64(),
-
-        // Arm
-        linuxArm64(),
-        macosArm64(),
-    )
-
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
     val hostTarget = when {
@@ -26,6 +16,22 @@ kotlin {
         isMingwX64 -> KonanTarget.MINGW_X64
         else -> error("Unsupported host OS: $hostOs")
     }
+
+    fun KotlinNativeTarget.disableWin() = if (isMingwX64) null else this
+    fun KotlinNativeTarget.disableLinux() = if (hostTarget == KonanTarget.LINUX_X64) null else this
+    fun KotlinNativeTarget.disableMac() = if (hostTarget == KonanTarget.MACOS_X64) null else this
+
+    val targets = listOf(
+        // X64
+        mingwX64(),
+
+        linuxX64().disableWin(),
+        macosX64().disableWin(),
+
+        // Arm
+        linuxArm64().disableWin(),
+        macosArm64().disableWin(),
+    ).filterNotNull()
 
     sourceSets {
         val nativeMain by creating {
@@ -88,7 +94,7 @@ val generatePythonDef = tasks.create<Exec>("generatePythonDef") {
 
     group = "interop"
     description = "Generate Python.def file"
-    executable = "python3"
+    executable = "python"
 
     val cinteropDir = "${project.projectDir.absolutePath}/src/nativeInterop/cinterop"
     val parts = minPyVersion.split(".").toMutableList()
@@ -101,12 +107,13 @@ val generatePythonDef = tasks.create<Exec>("generatePythonDef") {
         "-c",
         """
 import sysconfig
+from platform import win32_edition
 paths = sysconfig.get_paths()
 template = '''
 headers = Python.h
 package = python
-compilerOpts = -I"{INCLUDE_DIR}"
-linkerOpts = -L"{LIB_DIR}" -l python3
+compilerOpts = -I "{INCLUDE_DIR}"
+linkerOpts = -L "{LIB_DIR}" -l python3
 
 ---
 
@@ -115,36 +122,46 @@ struct KtPyObject {{
     void* ktObject;
 }};
 
-// Wrapper func for _PyUnicode_AsString macro
 char* PyUnicode_AsString(PyObject* obj) {{
     return _PyUnicode_AsString(obj);
 }}
 '''.strip()
 
 with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
-    fp.write(template.format(
+    body = template.format(
         INCLUDE_DIR=paths['platinclude'],
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
-    ))
+    )
+    if win32_edition() is not None:
+        body = body.replace('/', '\\')
+    fp.write(body)
+    print('${cinteropDir.replace('\\', '/')}/python.def\n' + body)
+
 with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') as fp:
-    fp.write(template.format(
-        INCLUDE_DIR="mingw64/include/python${pyVersion}",
+    body = template.format(
+        INCLUDE_DIR='${project.projectDir.absolutePath}/mingw64/include/python${pyVersion}',
         LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
         MIN_VERSION_HEX='0x${versionHex}'
-    ))
+    )
+    fp.write(body)
+    print('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def\n' + body)
         """.trim()
     )
     files(
         "${cinteropDir.replace('\\', '/')}/python.def",
+        "${cinteropDir.replace('\\', '/')}/python-windows.def",
         "${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def",
     )
 }
 
 for (target in listOf("LinuxX64", "MacosX64", "MingwX64", "LinuxArm64", "MacosArm64")) {
     try {
-        tasks.getByName("cinteropPython${target}") {
+        val interop = tasks.getByName("cinteropPython${target}") {
             dependsOn(generatePythonDef)
+        }
+        tasks.named("generateProjectStructureMetadata") {
+            dependsOn(interop)
         }
     } catch (e: Exception) {
         println("Skipping cinteropPython${target} as it's not available on this OS")

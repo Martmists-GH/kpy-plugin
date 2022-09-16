@@ -1,3 +1,4 @@
+import com.martmists.commons.martmistsPublish
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -16,7 +17,6 @@ dependencies {
 
 buildConfig {
     packageName.set("com.martmists.kpy.cfg")
-
     buildConfigField("String", "VERSION", "\"${project.version}\"")
 }
 

@@ -31,7 +31,7 @@ open class KPyPlugin : Plugin<Project> {
                     kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${targetName}/${targetName}Main/kotlin")
 
                     dependencies {
-                        implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion}+${extension.pyVersion}")
+                        implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion}+${extension.pyVersion.value}")
                     }
                 }
             }

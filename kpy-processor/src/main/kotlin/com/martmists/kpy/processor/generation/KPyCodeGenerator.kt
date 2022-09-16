@@ -272,7 +272,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |        memScoped {
             |            val selfKt = self!!.kt.cast<${clazz.name}>()
             |            $body
-            |            result.toPython().incref()
+            |            result.toPython()
             |        }
             |    } catch (e: Throwable) {
             |        PyErr_SetString(PyExc_Exception, e.toString())
@@ -374,7 +374,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |        memScoped {
             |            val selfKt = self!!.kt.cast<${clazz.name}>()
             |            val result = selfKt.${function.name}()
-            |            result.toPython().incref()
+            |            result.toPython()
             |        }
             |    } catch (e: Throwable) {
             |        PyErr_SetString(PyExc_Exception, e.toString())
@@ -393,7 +393,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |        memScoped {
             |            val selfKt = self!!.kt.cast<${clazz.name}>()
             |            val result = selfKt.${function.name}(arg.toKotlin())
-            |            result.toPython().incref()
+            |            result.toPython()
             |        }
             |    } catch (e: Throwable) {
             |        PyErr_SetString(PyExc_Exception, e.toString())
@@ -412,7 +412,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |        memScoped {
             |            val selfKt = self!!.kt.cast<${clazz.name}>()
             |            val result = selfKt.${function.name}(arg.toKotlin(), arg2.toKotlin())
-            |            result.toPython().incref()
+            |            result.toPython()
             |        }
             |    } catch (e: Throwable) {
             |        PyErr_SetString(PyExc_Exception, e.toString())
@@ -445,7 +445,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |        memScoped {
             |            val selfKt = self!!.kt.cast<${clazz.name}>()
             |            val result = selfKt.${function.name}(arg.toKotlin(), arg2)
-            |            result.toPython().incref()
+            |            result.toPython()
             |        }
             |    } catch (e: Throwable) {
             |        PyErr_SetString(PyExc_Exception, e.toString())
@@ -516,7 +516,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |        memScoped {
             |            val selfKt = self!!.kt.cast<${clazz.name}>()
             |            val result = selfKt.${function.name}(arg.convert())
-            |            result.toPython().incref()
+            |            result.toPython()
             |        }
             |    } catch (e: Throwable) {
             |        PyErr_SetString(PyExc_Exception, e.toString())
