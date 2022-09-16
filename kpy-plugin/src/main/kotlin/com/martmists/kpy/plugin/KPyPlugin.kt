@@ -24,14 +24,14 @@ open class KPyPlugin : Plugin<Project> {
     private fun Project.setupSourceSets() {
         afterEvaluate {
             kotlinExtension.apply {
-                targets.filterIsInstance<KotlinNativeTarget>().forEach {
-                    sourceSets.getByName("${it.targetName}Main") {
-                        kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${it.targetName}/${it.targetName}Main/kotlin")
+                val extension = project.the<KPyExtension>()
+                val targetName = extension.target ?: targets.filterIsInstance<KotlinNativeTarget>().first().targetName
 
-                        val extension = the<KPyExtension>()
-                        dependencies {
-                            implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion}+${extension.pyVersion}")
-                        }
+                sourceSets.getByName("${targetName}Main") {
+                    kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${targetName}/${targetName}Main/kotlin")
+
+                    dependencies {
+                        implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion}+${extension.pyVersion}")
                     }
                 }
             }
@@ -61,9 +61,8 @@ open class KPyPlugin : Plugin<Project> {
         afterEvaluate {
             dependencies.apply {
                 val extension = project.the<KPyExtension>()
-                kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().forEach {
-                    add("ksp${it.targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion}")
-                }
+                val targetName = extension.target ?: kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first().targetName
+                add("ksp${targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion}")
             }
         }
     }
@@ -71,19 +70,22 @@ open class KPyPlugin : Plugin<Project> {
     private fun Project.setupTasks() {
         // Provide setup.py metadata
         tasks.register("setupMetadata") {
-            doLast {
-                val target = kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first()
-                val ext = project.the<KPyExtension>()
-                println("""
+            afterEvaluate {
+                doLast {
+                    val ext = project.the<KPyExtension>()
+                    val targetName = ext.target ?: kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first().targetName
+                    println("""
                     |===METADATA START===
                     |project_name = "${project.name}"
                     |project_version = "${project.version}"
                     |build_dir = "${buildDir.absolutePath}"
-                    |target = "${target.targetName}"
+                    |target = "$targetName"
                     |has_stubs = ${if (ext.generateStubs) "True" else "False"}
                     ${ext.props.map { (key, value) -> "|$key = $value" }.joinToString { "\n" }}
                     |===METADATA END===
-                """.trimMargin())
+                """.trimMargin()
+                    )
+                }
             }
         }
     }

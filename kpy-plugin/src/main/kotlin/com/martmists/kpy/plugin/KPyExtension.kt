@@ -13,6 +13,9 @@ open class KPyExtension {
     // Generates the native code under _{name} and adds python stubs
     var generateStubs: Boolean = true
 
+    // Native target by name, defaults to first alphabetically
+    var target: String? = null
+
     // Add properties to propagate to setup.py
     fun metadata(name: String, value: String) {
         props[name] = value

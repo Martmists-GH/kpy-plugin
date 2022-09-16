@@ -5,10 +5,10 @@ buildscript {
 }
 
 plugins {
-    kotlin("multiplatform") version "1.6.21" apply false
-    kotlin("jvm") version "1.6.21" apply false
+    kotlin("multiplatform") version "1.7.10" apply false
+    kotlin("jvm") version "1.7.10" apply false
 
-    id("com.google.devtools.ksp") version "1.6.21-1.0.5" apply false
+    id("com.google.devtools.ksp") version "1.7.10-1.0.6" apply false
     id("com.github.gmazzo.buildconfig") version "3.0.3" apply false
 
     id("com.github.ben-manes.versions") version "0.42.0"
@@ -21,7 +21,7 @@ repositories {
 
 allprojects {
     group = "com.martmists.kpy"
-    version = "0.3.2"
+    version = "0.4.0"
 
     tasks.withType<DependencyUpdatesTask> {
         fun isNonStable(version: String): Boolean {

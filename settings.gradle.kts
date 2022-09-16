@@ -5,7 +5,7 @@ include(":kpy-sample")
 
 pluginManagement {
     repositories {
-        mavenLocal()
         gradlePluginPortal()
+        mavenCentral()
     }
 }
