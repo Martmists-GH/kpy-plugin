@@ -62,7 +62,7 @@ open class KPyPlugin : Plugin<Project> {
             dependencies.apply {
                 val extension = project.the<KPyExtension>()
                 val targetName = extension.target.get() ?: kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first().targetName
-                add("ksp${targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion}")
+                add("ksp${targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion.get()}")
             }
         }
     }

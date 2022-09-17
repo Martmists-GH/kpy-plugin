@@ -24,4 +24,12 @@ abstract class KPyExtension {
 
     // Name of the root native package
     abstract val moduleName: Property<String>
+
+    fun metadata(key: String, value: String) {
+        props.put(key, value)
+    }
+
+    fun metadata(vararg entries: Pair<String, String>) {
+        props.putAll(entries.toMap())
+    }
 }
