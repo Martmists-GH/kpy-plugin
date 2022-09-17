@@ -8,6 +8,8 @@ abstract class KPyExtension {
         pyVersion.convention(PythonVersion.Py310)
         kpyVersion.convention(BuildConfig.VERSION)
         generateStubs.convention(true)
+        target.convention(null as String?)
+        moduleName.convention(null as String?)
     }
 
     abstract val props: MapProperty<String, String>
@@ -20,10 +22,10 @@ abstract class KPyExtension {
     abstract val generateStubs: Property<Boolean>
 
     // Native target by name, defaults to first alphabetically
-    abstract val target: Property<String>
+    abstract val target: Property<String?>
 
     // Name of the root native package
-    abstract val moduleName: Property<String>
+    abstract val moduleName: Property<String?>
 
     fun metadata(key: String, value: String) {
         props.put(key, value)
