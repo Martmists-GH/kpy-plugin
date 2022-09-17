@@ -50,6 +50,7 @@ val setupMetadata by tasks.creating {
         println("""
             |===METADATA START===
             |project_name = "${project.name}"
+            |module_name = "${project.name}"
             |project_version = "${project.version}"
             |target = "$targetName"
             |has_stubs = True

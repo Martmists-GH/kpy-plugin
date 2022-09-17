@@ -14,7 +14,8 @@ open class MetadataTask : DefaultTask() {
         val targetName = ext.target.get() ?: project.kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first().targetName
         println("""
         |===METADATA START===
-        |project_name = "${ext.moduleName.get() ?: project.name}"
+        |project_name = "${project.name}"
+        |module_name = "${ext.moduleName.get() ?: project.name}"
         |project_version = "${project.version}"
         |build_dir = "${project.buildDir.absolutePath}"
         |target = "$targetName"

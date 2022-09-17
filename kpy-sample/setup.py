@@ -43,11 +43,11 @@ def snake_case(name):
 def extensions():
     folder = "debugStatic" if debug else "releaseStatic"
     prefix = "_" if has_stubs else ""
-    native = Extension(prefix + snake_case(project_name),
+    native = Extension(prefix + module_name,
                        sources=[f'{build_dir}/generated/ksp/{target}/{target}Main/resources/entrypoint.cpp'],
                        include_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
                        library_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
-                       libraries=[snake_case(project_name)])
+                       libraries=[project_name])
 
     return [native]
 
@@ -66,7 +66,7 @@ else:
     attrs["packages"] = []
 
 setup(
-    name=snake_case(project_name),
+    name=module_name,
     version=project_version,
     description=long_description,
     ext_modules=extensions(),
