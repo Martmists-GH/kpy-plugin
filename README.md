@@ -24,8 +24,8 @@ Enable the plugin in your build.gradle.kts file:
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "1.6.21"  // current compatible version
-    id("com.martmists.kpy.kpy-plugin") version "0.3.2"  // Requires Gradle 7.5+
+    kotlin("multiplatform") version "1.7.10"
+    id("com.martmists.kpy.kpy-plugin") version "0.4.4"
 }
 
 kotlin {
@@ -53,7 +53,7 @@ kotlin {
 }
 ```
 
-Use the following setup.py template:
+Use the following setup.py template (note: may be outdated, see kpy-sample for an up-to-date example):
 
 ```python
 from os.path import dirname, abspath
@@ -82,8 +82,8 @@ if proc.wait() != 0:
 output = proc.stdout.read().decode()
 real_output = output.split("===METADATA START===")[1].split("===METADATA END===")[0]
 
-# Apply the configuration
 exec(real_output, globals(), locals())
+# Types of variables from gradle metadata
 has_stubs: bool
 project_name: str
 project_version: str
@@ -91,9 +91,9 @@ build_dir: str
 root_dir: str
 target: str
 
-# Prevent problems with multiple source roots, if able
-build_dir = build_dir[len(dir_name)+1:]
-root_dir = root_dir[len(dir_name)+1:]
+print("name: " + project_name)
+print("version: " + project_version)
+
 
 def snake_case(name):
     return name.replace("-", "_").lower()
@@ -102,17 +102,17 @@ def snake_case(name):
 def extensions():
     folder = "debugStatic" if debug else "releaseStatic"
     prefix = "_" if has_stubs else ""
-    native = Extension(prefix + snake_case(project_name),
+    native = Extension(prefix + module_name,
                        sources=[f'{build_dir}/generated/ksp/{target}/{target}Main/resources/entrypoint.cpp'],
                        include_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
                        library_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
-                       libraries=[snake_case(project_name)])
+                       libraries=[project_name])
 
     return [native]
 
 
-with open("README.md", "r") as fp:
-    long_description = fp.read()
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 
 attrs = {}
@@ -124,14 +124,14 @@ if has_stubs:
 else:
     attrs["packages"] = []
 
-    
 setup(
-    name=snake_case(project_name),
+    name=module_name,
     version=project_version,
     description=long_description,
     ext_modules=extensions(),
     **attrs
 )
+
 ```
 
 ## Configuration
@@ -146,11 +146,11 @@ kpy {
 
     // Specify the python version to build against.
     // Currently supported: [3.9, 3.10]
-    pyVersion = "3.9"
+    pyVersion.set(PythonVersion.Py310)
 
     // Generate python stubs for the native sources
     // These are stored to `build/generated/ksp/<target>/<target>Main/resources/`
     // Note: these will be overwritten every time you build the project
-    generateStubs = true
+    generateStubs.set(true)
 }
 ```
