@@ -25,13 +25,13 @@ open class KPyPlugin : Plugin<Project> {
         afterEvaluate {
             kotlinExtension.apply {
                 val extension = project.the<KPyExtension>()
-                val targetName = extension.target ?: targets.filterIsInstance<KotlinNativeTarget>().first().targetName
+                val targetName = extension.target.get() ?: targets.filterIsInstance<KotlinNativeTarget>().first().targetName
 
                 sourceSets.getByName("${targetName}Main") {
                     kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${targetName}/${targetName}Main/kotlin")
 
                     dependencies {
-                        implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion}+${extension.pyVersion.value}")
+                        implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion.get()}+${extension.pyVersion.get().value}")
                     }
                 }
             }
@@ -61,7 +61,7 @@ open class KPyPlugin : Plugin<Project> {
         afterEvaluate {
             dependencies.apply {
                 val extension = project.the<KPyExtension>()
-                val targetName = extension.target ?: kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first().targetName
+                val targetName = extension.target.get() ?: kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first().targetName
                 add("ksp${targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion}")
             }
         }
@@ -70,9 +70,7 @@ open class KPyPlugin : Plugin<Project> {
     private fun Project.setupTasks() {
         // Provide setup.py metadata
         tasks {
-            val setupMetadata by registering(MetadataTask::class) {
-
-            }
+            val setupMetadata by registering(MetadataTask::class)
         }
     }
 
@@ -82,7 +80,7 @@ open class KPyPlugin : Plugin<Project> {
         afterEvaluate {
             extensions.getByType(KspExtension::class.java).apply {
                 arg("projectName", name)
-                arg("generateStubs", "${ext.generateStubs}")
+                arg("generateStubs", "${ext.generateStubs.get()}")
             }
         }
     }

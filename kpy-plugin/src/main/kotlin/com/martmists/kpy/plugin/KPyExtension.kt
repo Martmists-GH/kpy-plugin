@@ -1,23 +1,27 @@
 package com.martmists.kpy.plugin
 
 import com.martmists.kpy.cfg.BuildConfig
+import org.gradle.api.provider.*
 
-open class KPyExtension {
-    internal val props = mutableMapOf<String, String>()
+abstract class KPyExtension {
+    init {
+        pyVersion.convention(PythonVersion.Py310)
+        kpyVersion.convention(BuildConfig.VERSION)
+        generateStubs.convention(true)
+    }
+
+    abstract val props: MapProperty<String, String>
 
     // Version to target
-    // Supported: [3.10]
-    var pyVersion: PythonVersion = PythonVersion.Py310
-    var kpyVersion: String = BuildConfig.VERSION
+    abstract val pyVersion: Property<PythonVersion>
+    abstract val kpyVersion: Property<String>
 
     // Generates the native code under _{name} and adds python stubs
-    var generateStubs: Boolean = true
+    abstract val generateStubs: Property<Boolean>
 
     // Native target by name, defaults to first alphabetically
-    var target: String? = null
+    abstract val target: Property<String>
 
-    // Add properties to propagate to setup.py
-    fun metadata(name: String, value: String) {
-        props[name] = value
-    }
+    // Name of the root native package
+    abstract val moduleName: Property<String>
 }
