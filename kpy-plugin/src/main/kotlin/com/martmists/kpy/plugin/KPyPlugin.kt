@@ -69,20 +69,9 @@ open class KPyPlugin : Plugin<Project> {
 
     private fun Project.setupTasks() {
         // Provide setup.py metadata
-        tasks.register("setupMetadata") {
-            doLast {
-                val ext = project.the<KPyExtension>()
-                val targetName = ext.target ?: kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first().targetName
-                println("""
-                |===METADATA START===
-                |project_name = "${project.name}"
-                |project_version = "${project.version}"
-                |build_dir = "${buildDir.absolutePath}"
-                |target = "$targetName"
-                |has_stubs = ${if (ext.generateStubs) "True" else "False"}
-                ${ext.props.map { (key, value) -> "|$key = $value" }.joinToString { "\n" }}
-                |===METADATA END===
-                """.trimMargin())
+        tasks {
+            val setupMetadata by registering(MetadataTask::class) {
+
             }
         }
     }

@@ -92,11 +92,11 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     fun generateEntrypoint(module: KPyModule) {
         write("""
             |#include <Python.h>
-            |#include "lib${projectName.toSnakeCase()}_api.h"
+            |#include "lib${projectName}_api.h"
             |
             |extern "C" {
             |PyMODINIT_FUNC PyInit_${if (generateStubs) "_${module.name}" else module.name} (void) {
-            |    return (PyObject*)lib${projectName.toSnakeCase()}_symbols()->kotlin.root.initialize();
+            |    return (PyObject*)lib${projectName}_symbols()->kotlin.root.initialize();
             |}
             |}
             |
