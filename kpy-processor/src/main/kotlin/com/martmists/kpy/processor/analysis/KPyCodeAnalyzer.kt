@@ -124,13 +124,25 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
 
     private fun KSAnnotated.getExportName() : String? {
         val ann = annotations.firstOrNull { it.shortName.getShortName() == "PyExport" } ?: return null
-        val arg = ann.arguments.firstOrNull() ?: return null
-        return arg.value as String?
+        return ann.getNamedArgument<String>("name", 0)
     }
 
     private fun KSAnnotated.getExportPriority(): Int? {
         val ann = annotations.firstOrNull { it.shortName.getShortName() == "PyExport" } ?: return null
-        val arg = ann.arguments.firstOrNull() ?: return null
-        return arg.value as Int?
+        return ann.getNamedArgument<Int>("priority", 1)
+    }
+
+    private fun <T> KSAnnotation.getNamedArgument(name: String, index: Int) : T? {
+        val byName = mutableMapOf<String, T>()
+        val byIndex = mutableMapOf<Int, T>()
+
+        arguments.forEachIndexed { index, argument ->
+            if (argument.name != null) {
+                byName[argument.name!!.asString()] = argument.value as T
+            }
+            byIndex[index] = argument.value as T
+        }
+
+        return byName[name] ?: byIndex[index]
     }
 }
