@@ -22,7 +22,7 @@ repositories {
 
 allprojects {
     group = "com.martmists.kpy"
-    version = "0.4.6"
+    version = "0.5.0"
 
     tasks.withType<DependencyUpdatesTask> {
         rejectVersionIf {

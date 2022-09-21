@@ -87,6 +87,7 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
             funcs.map { it.asKPy() }.toMutableList(),
             magic.map { it.asKPyMagic() }.toMutableList(),
             props.map { it.asKPyProperty() }.toMutableList(),
+            getExportPriority() ?: 9999
         )
     }
 
@@ -94,7 +95,8 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
         return KPyFunction(
             simpleName.asString(),
             getExportName() ?: simpleName.getShortName(),
-            this
+            this,
+            getExportPriority() ?: 9999
         )
     }
 
@@ -124,5 +126,11 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
         val ann = annotations.firstOrNull { it.shortName.getShortName() == "PyExport" } ?: return null
         val arg = ann.arguments.firstOrNull() ?: return null
         return arg.value as String?
+    }
+
+    private fun KSAnnotated.getExportPriority(): Int? {
+        val ann = annotations.firstOrNull { it.shortName.getShortName() == "PyExport" } ?: return null
+        val arg = ann.arguments.firstOrNull() ?: return null
+        return arg.value as Int?
     }
 }

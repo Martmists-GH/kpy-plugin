@@ -5,4 +5,4 @@ package kpy.annotations
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.SOURCE)
-annotation class PyExport(val name: String = "")
+annotation class PyExport(val name: String = "", val priority: Int = 9999)

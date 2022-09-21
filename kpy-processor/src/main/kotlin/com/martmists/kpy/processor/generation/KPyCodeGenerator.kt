@@ -24,11 +24,11 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
 
                     generateImports()
 
-                    for (classDef in module.classes) {
+                    for (classDef in module.classes.sortedBy { cls -> cls.priority }) {
                         generate(classDef)
                     }
 
-                    for (function in module.functions) {
+                    for (function in module.functions.sortedBy { fn -> fn.priority }) {
                         generate(function)
                     }
 

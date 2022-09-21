@@ -86,6 +86,7 @@ exec(real_output, globals(), locals())
 # Types of variables from gradle metadata
 has_stubs: bool
 project_name: str
+module_name: str
 project_version: str
 build_dir: str
 root_dir: str
