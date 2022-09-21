@@ -139,8 +139,9 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
         arguments.forEachIndexed { index, argument ->
             if (argument.name != null) {
                 byName[argument.name!!.asString()] = argument.value as T
+            } else {
+                byIndex[index] = argument.value as T
             }
-            byIndex[index] = argument.value as T
         }
 
         return byName[name] ?: byIndex[index]
