@@ -25,7 +25,7 @@ Enable the plugin in your build.gradle.kts file:
 ```kotlin
 plugins {
     kotlin("multiplatform") version "1.7.10"
-    id("com.martmists.kpy.kpy-plugin") version "0.5.2"
+    id("com.martmists.kpy.kpy-plugin") version "0.5.3"
 }
 
 kotlin {
