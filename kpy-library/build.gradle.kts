@@ -68,7 +68,12 @@ kotlin {
 
                         KonanTarget.LINUX_X64 -> {
                             includeDirs(outDir.resolve("python/include/python${pythonVersion.str}"))
-                            linkerOpts("-L${outDir.resolve("python/lib").absolutePath} -lpython3 -lresolv")
+                            linkerOpts("-L${outDir.resolve("python/lib").absolutePath} -lpython3")
+                        }
+
+                        KonanTarget.MACOS_X64 -> {
+                            includeDirs(outDir.resolve("python/include/python${pythonVersion.str}"))
+                            linkerOpts("-L${outDir.resolve("python/lib").absolutePath} -lpython3")
                         }
 
                         else -> throw IllegalArgumentException("Unsupported target: $targetName")
