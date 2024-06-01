@@ -30,6 +30,7 @@ abstract class DownloadPythonTask : DefaultTask() {
     enum class Platform {
         Windows,
         Linux,
+        MacOS,
     }
 
     @get:Input
@@ -56,6 +57,7 @@ abstract class DownloadPythonTask : DefaultTask() {
         val hostOs = when (platform) {
             Platform.Windows -> "pc-windows-msvc"
             Platform.Linux -> "unknown-linux-gnu"
+            Platform.MacOS -> "apple-darwin"
             else -> throw IllegalArgumentException("Unsupported platform: $platform")
         }
         val tmpFile by tarFile

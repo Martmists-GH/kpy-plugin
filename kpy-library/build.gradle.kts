@@ -39,6 +39,7 @@ kotlin {
                     platform = when (konanTarget) {
                         KonanTarget.MINGW_X64 -> DownloadPythonTask.Platform.Windows
                         KonanTarget.LINUX_X64 -> DownloadPythonTask.Platform.Linux
+                        KonanTarget.MACOS_X64 -> DownloadPythonTask.Platform.MacOS
                         else -> throw IllegalArgumentException("Unsupported target: $targetName")
                     }
                 }
