@@ -5,7 +5,7 @@ import org.gradle.api.provider.*
 
 abstract class KPyExtension {
     init {
-        pyVersion.convention(PythonVersion.Py310)
+        pyVersion.convention(PythonVersion.Py311)
         kpyVersion.convention(BuildConfig.VERSION)
         generateStubs.convention(true)
         target.convention(null as String?)

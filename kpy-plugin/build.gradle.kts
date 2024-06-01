@@ -5,7 +5,7 @@ plugins {
     `kotlin-dsl`
     kotlin("jvm")
     id("com.gradle.plugin-publish") version "0.21.0"
-    id("com.github.gmazzo.buildconfig") version "3.0.3"
+    id("com.github.gmazzo.buildconfig")
 }
 
 buildDir = file("../build/kpy-plugin")
@@ -18,7 +18,7 @@ dependencies {
     implementation(gradleKotlinDsl())
     implementation(kotlin("stdlib"))
     implementation(kotlin("gradle-plugin"))
-    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.7.10-1.0.6")
+    implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.0.0-1.0.21")
 }
 
 pluginBundle {

@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.gradle.configurationcache.extensions.capitalized
+import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
@@ -7,165 +8,93 @@ plugins {
     id("com.github.gmazzo.buildconfig")
 }
 
+val libVersion = version
+val pythonVersion = let {
+    val versionString = findProperty("pythonVersion") as String? ?: "3.11"
+    DownloadPythonTask.Version.values().first { it.str == versionString }
+}
+version = "$version+${pythonVersion.str}"
+
 kotlin {
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
-    val hostTarget = when {
-        hostOs == "Mac OS X" -> KonanTarget.MACOS_X64
-        hostOs == "Linux" -> KonanTarget.LINUX_X64
-        isMingwX64 -> KonanTarget.MINGW_X64
-        else -> error("Unsupported host OS: $hostOs")
+
+    val target = when {
+        hostOs == "Mac OS X" -> macosX64()
+        hostOs == "Linux" -> linuxX64()
+        isMingwX64 -> mingwX64()
+        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
 
-    fun KotlinNativeTarget.disableWin() = if (isMingwX64) null else this
-    fun KotlinNativeTarget.disableLinux() = if (hostTarget == KonanTarget.LINUX_X64) null else this
-    fun KotlinNativeTarget.disableMac() = if (hostTarget == KonanTarget.MACOS_X64) null else this
 
-    val targets = listOf(
-        // X64
-        mingwX64(),
-
-        linuxX64().disableWin(),
-        macosX64().disableWin(),
-
-        // Arm
-        linuxArm64().disableWin(),
-        macosArm64().disableWin(),
-    ).filterNotNull()
-
-    sourceSets {
-        val nativeMain by creating {
+    target.apply {
+        val main by compilations.getting {
 
         }
+        val python by main.cinterops.creating {
+            definitionFile = project.layout.projectDirectory.file("src/commonMain/cinterop/python.def")
 
-        val linuxX64Main by getting {
-            dependsOn(nativeMain)
-        }
-
-        val mingwX64Main by getting {
-            dependsOn(nativeMain)
-        }
-
-        val macosX64Main by getting {
-            dependsOn(nativeMain)
-        }
-
-        val linuxArm64Main by getting {
-            dependsOn(nativeMain)
-        }
-
-        val macosArm64Main by getting {
-            dependsOn(nativeMain)
-        }
-    }
-
-    targets.forEach {
-        it.apply {
-            val main by compilations.getting {
-
-            }
-            val python by main.cinterops.creating {
-                if (konanTarget != hostTarget && konanTarget == KonanTarget.MINGW_X64) {
-                    defFile = project.file("src/nativeInterop/cinterop/python-github-MingwX64.def")
+            val downloadSourcesTask = tasks.register("downloadPython${targetName}", DownloadPythonTask::class) {
+                version = pythonVersion
+                platform = when (konanTarget) {
+                    KonanTarget.MINGW_X64 -> DownloadPythonTask.Platform.Windows
+                    KonanTarget.LINUX_X64 -> DownloadPythonTask.Platform.Linux
+                    else -> throw IllegalArgumentException("Unsupported target: $targetName")
                 }
             }
 
-            binaries {
-                staticLib {
-                    binaryOptions["memoryModel"] = "experimental"
-                    freeCompilerArgs += listOf("-Xgc=cms")
+            val extractSourcesTask = tasks.register("extractPython${targetName.capitalized()}", Exec::class) {
+                dependsOn(downloadSourcesTask)
+
+                val outDir = project.layout.buildDirectory.dir("python-${pythonVersion.str}-${targetName}").get().asFile
+
+                executable = "tar"
+                args(
+                    "-xzf",
+                    downloadSourcesTask.get().tarFile.get().absolutePath,
+                    "-C",
+                    outDir.absolutePath
+                )
+
+                outputs.dir(outDir)
+
+                when (konanTarget) {
+                    KonanTarget.MINGW_X64 -> {
+                        includeDirs(outDir.resolve("python/include"))
+                        linkerOpts("-L${outDir.resolve("python").absolutePath} -lpython3")
+                    }
+                    KonanTarget.LINUX_X64 -> {
+                        includeDirs(outDir.resolve("python/include/python${pythonVersion.str}"))
+                        linkerOpts("-L${outDir.resolve("python/lib").absolutePath} -lpython3 -lresolv")
+                    }
+                    else -> throw IllegalArgumentException("Unsupported target: $targetName")
                 }
+            }
+
+            tasks.named(interopProcessingTaskName) {
+                dependsOn(extractSourcesTask)
             }
         }
     }
 }
 
-val pyVersion = findProperty("pythonVersion") as String? ?: "3.9"
-version = "$version+$pyVersion"
+tasks {
+    withType<KotlinNativeCompile> {
+        compilerOptions {
+            optIn = listOf(
+                "kotlinx.cinterop.ExperimentalForeignApi",
+                "kotlinx.cinterop.ExperimentalUnsignedTypes",
+                "kotlinx.cinterop.UnsafeNumber",
+            )
+        }
+    }
+}
 
 buildConfig {
     packageName.set("com.martmists.kpy.cfg")
 
-    buildConfigField("String", "VERSION", "\"${project.version}\"")
-}
-
-val generatePythonDef = tasks.create<Exec>("generatePythonDef") {
-    val minPyVersion = pyVersion
-
-    group = "interop"
-    description = "Generate Python.def file"
-    executable = "python"
-
-    val cinteropDir = "${project.projectDir.absolutePath}/src/nativeInterop/cinterop"
-    val parts = minPyVersion.split(".").toMutableList()
-    while (parts.size < 4) {
-        parts.add("0")
-    }
-    val versionHex = parts.joinToString("") { it.toInt().toString(16) }
-
-    args(
-        "-c",
-        """
-import sysconfig
-from platform import win32_edition
-paths = sysconfig.get_paths()
-template = '''
-headers = Python.h
-package = python
-compilerOpts = -I "{INCLUDE_DIR}"
-linkerOpts = -L "{LIB_DIR}" -l python3
-
----
-
-struct KtPyObject {{
-    PyObject base;
-    void* ktObject;
-}};
-
-char* PyUnicode_AsString(PyObject* obj) {{
-    return _PyUnicode_AsString(obj);
-}}
-'''.strip()
-
-with open('${cinteropDir.replace('\\', '/')}/python.def', 'w') as fp:
-    body = template.format(
-        INCLUDE_DIR=paths['platinclude'],
-        LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
-        MIN_VERSION_HEX='0x${versionHex}'
-    )
-    if win32_edition() is not None:
-        body = body.replace('/', '\\')
-    fp.write(body)
-    print('${cinteropDir.replace('\\', '/')}/python.def\n' + body)
-
-with open('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def', 'w') as fp:
-    body = template.format(
-        INCLUDE_DIR='${project.projectDir.absolutePath}/mingw64/include/python${pyVersion}',
-        LIB_DIR='/'.join(paths['platstdlib'].split('/')[:-1]),
-        MIN_VERSION_HEX='0x${versionHex}'
-    )
-    fp.write(body)
-    print('${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def\n' + body)
-        """.trim()
-    )
-    files(
-        "${cinteropDir.replace('\\', '/')}/python.def",
-        "${cinteropDir.replace('\\', '/')}/python-windows.def",
-        "${cinteropDir.replace('\\', '/')}/python-github-MingwX64.def",
-    )
-}
-
-for (target in listOf("LinuxX64", "MacosX64", "MingwX64", "LinuxArm64", "MacosArm64")) {
-    try {
-        val interop = tasks.getByName("cinteropPython${target}") {
-            dependsOn(generatePythonDef)
-        }
-        tasks.named("generateProjectStructureMetadata") {
-            dependsOn(interop)
-        }
-    } catch (e: Exception) {
-        println("Skipping cinteropPython${target} as it's not available on this OS")
-    }
+    buildConfigField("String", "VERSION", "\"${libVersion}\"")
+    buildConfigField("String", "PYTHON_VERSION", "\"${pythonVersion.str}\"")
 }
 
 if (project.ext.has("mavenToken")) {
@@ -200,7 +129,7 @@ if (project.ext.has("mavenToken")) {
 
         publications.withType<MavenPublication> {
             if (System.getenv("DEPLOY_TYPE") == "snapshot") {
-                version = "${System.getenv("GITHUB_SHA")}+$pyVersion"
+                version = "${System.getenv("GITHUB_SHA")}+$pythonVersion"
             }
         }
     }

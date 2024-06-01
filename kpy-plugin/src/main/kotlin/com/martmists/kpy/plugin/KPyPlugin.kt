@@ -2,13 +2,13 @@ package com.martmists.kpy.plugin
 
 import com.google.devtools.ksp.gradle.KspExtension
 import com.google.devtools.ksp.gradle.KspGradleSubplugin
-import com.martmists.kpy.cfg.BuildConfig
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.configurationcache.extensions.capitalized
 import org.gradle.kotlin.dsl.*
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.targets
 
 open class KPyPlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -25,10 +25,10 @@ open class KPyPlugin : Plugin<Project> {
         afterEvaluate {
             kotlinExtension.apply {
                 val extension = project.the<KPyExtension>()
-                val targetName = extension.target.get() ?: targets.filterIsInstance<KotlinNativeTarget>().first().targetName
+                val targetName = extension.target.get() ?: (this as KotlinMultiplatformExtension).targets.filterIsInstance<KotlinNativeTarget>().first().targetName
 
                 sourceSets.getByName("${targetName}Main") {
-                    kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/${targetName}/${targetName}Main/kotlin")
+                    kotlin.srcDir(layout.projectDirectory.dir("/generated/ksp/${targetName}/${targetName}Main/kotlin"))
 
                     dependencies {
                         implementation("com.martmists.kpy:kpy-library:${extension.kpyVersion.get()}+${extension.pyVersion.get().value}")
@@ -61,8 +61,8 @@ open class KPyPlugin : Plugin<Project> {
         afterEvaluate {
             dependencies.apply {
                 val extension = project.the<KPyExtension>()
-                val targetName = extension.target.get() ?: kotlinExtension.targets.filterIsInstance<KotlinNativeTarget>().first().targetName
-                add("ksp${targetName.capitalize()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion.get()}")
+                val targetName = extension.target.get() ?: (kotlinExtension as KotlinMultiplatformExtension).targets.filterIsInstance<KotlinNativeTarget>().first().targetName
+                add("ksp${targetName.capitalized()}", "com.martmists.kpy:kpy-processor:${extension.kpyVersion.get()}")
             }
         }
     }

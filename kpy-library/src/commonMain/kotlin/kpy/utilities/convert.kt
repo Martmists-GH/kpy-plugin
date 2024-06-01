@@ -33,49 +33,82 @@ inline fun <reified R : Any> PyObjectT.toKotlinNullable() : R? = toKotlinNullabl
 fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
     val clazz = type?.classifier
 
+    @Suppress("RemoveRedundantCallsOfConversionMethods")
     return when (clazz) {
-        Int::class -> PyLong_AsLong(this).toInt()
-        Long::class -> PyLong_AsLong(this)
-        Float::class -> PyFloat_AsDouble(this).toFloat()
-        Double::class -> PyFloat_AsDouble(this)
-        String::class -> PyUnicode_AsString(this)!!.toKStringFromUtf8()
-        Boolean::class -> PyObject_IsTrue(this) == 1
+        Int::class -> {
+            require(PyObject_IsInstance(this, PyLong_Type.ob_base.ob_base.ptr) == 1) { "Expected int, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
+            PyLong_AsLong(this).toInt()
+        }
+        Long::class -> {
+            require(PyObject_IsInstance(this, PyLong_Type.ob_base.ob_base.ptr) == 1) { "Expected int, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
+            PyLong_AsLong(this).toLong()
+        }
+        Float::class -> {
+            require(PyObject_IsInstance(this, PyFloat_Type.ob_base.ob_base.ptr) == 1) { "Expected float, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
+            PyFloat_AsDouble(this).toFloat()
+        }
+        Double::class -> {
+            require(PyObject_IsInstance(this, PyFloat_Type.ob_base.ob_base.ptr) == 1) { "Expected float, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
+            PyFloat_AsDouble(this)
+        }
+        String::class -> {
+            require(PyObject_IsInstance(this, PyUnicode_Type.ob_base.ob_base.ptr) == 1) { "Expected str, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
+            PyUnicode_AsString(this)!!.toKStringFromUtf8()
+        }
+        Boolean::class -> {
+            require(PyObject_IsInstance(this, PyBool_Type.ob_base.ob_base.ptr) == 1) { "Expected bool, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
+            PyObject_IsTrue(this) == 1
+        }
         FloatArray::class -> {
+            require(PyObject_IsInstance(this, PyList_Type.ob_base.ob_base.ptr) == 1) { "Expected list, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
             val size = PyList_Size(this)
             FloatArray(size.convert()) { i ->
                 PyList_GetItem(this, i.convert()).toKotlin()
             }
         }
         DoubleArray::class -> {
+            require(PyObject_IsInstance(this, PyList_Type.ob_base.ob_base.ptr) == 1) { "Expected list, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
             val size = PyList_Size(this)
             DoubleArray(size.convert()) { i ->
                 PyList_GetItem(this, i.convert()).toKotlin()
             }
         }
         IntArray::class -> {
+            require(PyObject_IsInstance(this, PyList_Type.ob_base.ob_base.ptr) == 1) { "Expected list, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
             val size = PyList_Size(this)
             IntArray(size.convert()) { i ->
                 PyList_GetItem(this, i.convert()).toKotlin()
             }
         }
         LongArray::class -> {
+            require(PyObject_IsInstance(this, PyList_Type.ob_base.ob_base.ptr) == 1) { "Expected list, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
             val size = PyList_Size(this)
             LongArray(size.convert()) { i ->
                 PyList_GetItem(this, i.convert()).toKotlin()
             }
         }
         ByteArray::class -> {
+            require(PyObject_IsInstance(this, PyBytes_Type.ob_base.ob_base.ptr) == 1) { "Expected bytes, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
             val size = PyBytes_Size(this)
             PyBytes_AsString(this)!!.readBytes(size.convert())
         }
         List::class -> {
+            require(PyObject_IsInstance(this, PyList_Type.ob_base.ob_base.ptr) == 1) { "Expected list, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
+
             val subType = type.arguments[0].type
             val size = PyList_Size(this)
-            List(size.convert()) { i ->
-                PyList_GetItem(this, i.convert()).toKotlinNullable(subType) as? Any
+            if (subType?.isMarkedNullable == true) {
+                List(size.convert()) { i ->
+                    PyList_GetItem(this, i.convert()).toKotlinNullable(subType) as? Any
+                }
+            } else {
+                List(size.convert()) { i ->
+                    PyList_GetItem(this, i.convert()).toKotlin(subType) as Any
+                }
             }
         }
         Map::class, MutableMap::class -> {
+            require(PyObject_IsInstance(this, PyDict_Type.ob_base.ob_base.ptr) == 1) { "Expected dict, got ${(PyObject_Type(this) as CPointer<PyTypeObject>?)!!.pointed.tp_name!!.toKString()}" }
             val keyType = type.arguments[0].type
             val valueType = type.arguments[1].type
             val size = PyDict_Size(this)
@@ -83,11 +116,14 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
             val keys = PyDict_Keys(this).toKotlin<List<PyObjectT>>()
             val map = mutableMapOf<Any, Any?>()
 
-
             for (i in 0 until size) {
                 val key = keys[i.convert()]
                 val pKey = key.toKotlin(keyType) as Any
-                val pValue = PyDict_GetItem(this, key).toKotlinNullable(valueType) as? Any
+                val pValue = if (valueType?.isMarkedNullable == true) {
+                    PyDict_GetItem(this, key).toKotlinNullable(valueType) as Any?
+                } else {
+                    PyDict_GetItem(this, key).toKotlin(valueType) as Any
+                }
                 map[pKey] = pValue
             }
 
@@ -97,8 +133,16 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
             val firstType = type.arguments[0].type
             val secondType = type.arguments[1].type
 
-            val first = PyTuple_GetItem(this, 0).toKotlinNullable(firstType) as? Any
-            val second = PyTuple_GetItem(this, 1).toKotlinNullable(secondType) as? Any
+            val first = if (firstType?.isMarkedNullable == true) {
+                PyTuple_GetItem(this, 0).toKotlinNullable(firstType) as? Any
+            } else {
+                PyTuple_GetItem(this, 0).toKotlin(firstType) as Any
+            }
+            val second = if (secondType?.isMarkedNullable == true) {
+                PyTuple_GetItem(this, 1).toKotlinNullable(secondType) as? Any
+            } else {
+                PyTuple_GetItem(this, 1).toKotlin(secondType) as Any
+            }
             Pair(first, second)
         }
         Triple::class -> {
@@ -106,9 +150,21 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
             val secondType = type.arguments[1].type
             val thirdType = type.arguments[2].type
 
-            val first = PyTuple_GetItem(this, 0).toKotlinNullable(firstType) as? Any
-            val second = PyTuple_GetItem(this, 1).toKotlinNullable(secondType) as? Any
-            val third = PyTuple_GetItem(this, 2).toKotlinNullable(thirdType) as? Any
+            val first = if (firstType?.isMarkedNullable == true) {
+                PyTuple_GetItem(this, 0).toKotlinNullable(firstType) as? Any
+            } else {
+                PyTuple_GetItem(this, 0).toKotlin(firstType) as Any
+            }
+            val second = if (secondType?.isMarkedNullable == true) {
+                PyTuple_GetItem(this, 1).toKotlinNullable(secondType) as? Any
+            } else {
+                PyTuple_GetItem(this, 1).toKotlin(secondType) as Any
+            }
+            val third = if (thirdType?.isMarkedNullable == true) {
+                PyTuple_GetItem(this, 2).toKotlinNullable(thirdType) as? Any
+            } else {
+                PyTuple_GetItem(this, 2).toKotlin(thirdType) as Any
+            }
             Triple(first, second, third)
         }
         CPointer::class, CValuesRef::class, null -> {
@@ -124,7 +180,7 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
 
 @Suppress("IMPLICIT_CAST_TO_ANY", "UNCHECKED_CAST")
 fun <R : Any> PyObjectT.toKotlinNullable(type: KType?) : R? {
-    return if (this == Py_None) null else toKotlin(type)
+    return if (type?.isMarkedNullable == true && this == Py_None) null else toKotlin(type)
 }
 
 inline fun <reified T> T.toPython() = toPython(typeOf<T>())

@@ -27,7 +27,7 @@ kotlin {
                 implementation(project(":kpy-library"))
             }
 
-            kotlin.srcDir(buildDir.absolutePath + "/generated/ksp/$targetName/${targetName}Main/kotlin")
+            kotlin.srcDir(layout.buildDirectory.dir("generated/ksp/$targetName/${targetName}Main/kotlin"))
         }
     }
 
@@ -38,8 +38,11 @@ kotlin {
 
         binaries {
             staticLib {
-                binaryOptions["memoryModel"] = "experimental"
-                freeCompilerArgs += listOf("-Xgc=cms")
+                compilerOptions {
+                    optIn = listOf(
+                        "kotlinx.cinterop.ExperimentalForeignApi",
+                    )
+                }
             }
         }
     }
@@ -54,7 +57,7 @@ val setupMetadata by tasks.creating {
             |project_version = "${project.version}"
             |target = "$targetName"
             |has_stubs = True
-            |build_dir = "${buildDir.absolutePath.replace('\\', '/')}"
+            |build_dir = "${layout.buildDirectory.asFile.get().absolutePath.replace('\\', '/')}"
             |===METADATA END===
         """.trimMargin())
     }

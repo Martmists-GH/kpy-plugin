@@ -1,0 +1,13 @@
+headers = Python.h
+package = python
+
+---
+
+struct KtPyObject {
+    PyObject base;
+    void* ktObject;
+};
+
+char* PyUnicode_AsString(PyObject* obj) {
+    return _PyUnicode_AsString(obj);
+}

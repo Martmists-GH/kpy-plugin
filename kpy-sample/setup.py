@@ -5,7 +5,7 @@ from subprocess import Popen, PIPE
 from sys import version_info
 
 osname = system()
-debug = True
+debug = False
 
 dirname = dirname(__file__)
 if osname == "Linux" or osname == "Darwin":
@@ -26,6 +26,7 @@ real_output = output.split("===METADATA START===")[1].split("===METADATA END==="
 exec(real_output, globals(), locals())
 # Types of variables from gradle metadata
 has_stubs: bool
+module_name: str
 project_name: str
 project_version: str
 build_dir: str
@@ -43,11 +44,11 @@ def snake_case(name):
 def extensions():
     folder = "debugStatic" if debug else "releaseStatic"
     prefix = "_" if has_stubs else ""
-    native = Extension(prefix + module_name,
+    native = Extension(prefix + snake_case(module_name),
                        sources=[f'{build_dir}/generated/ksp/{target}/{target}Main/resources/entrypoint.cpp'],
                        include_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
                        library_dirs=[f"{build_dir}/bin/{target}/{folder}/"],
-                       libraries=[project_name])
+                       libraries=[snake_case(project_name)])
 
     return [native]
 

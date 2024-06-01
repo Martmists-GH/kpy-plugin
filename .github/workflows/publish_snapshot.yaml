@@ -19,62 +19,19 @@ env:
   DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 
 jobs:
-#  test-sample:
-#    strategy:
-#      matrix:
-#        python: [ '3.10' ]
-#        os: [ 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
-#    runs-on: ${{ matrix.os }}
-#    steps:
-#      # Check out project
-#      - uses: actions/checkout@v2
-#
-#      # Set up java
-#      - uses: actions/setup-java@v2
-#        with:
-#          java-version: '11'
-#          distribution: 'adopt'
-#          cache: 'gradle'
-#
-#      - uses: actions/cache@v3
-#        with:
-#          path: ~/.konan
-#          key: ${{ runner.os }}-konan
-#
-#      # Set up python
-#      - uses: actions/setup-python@v3
-#        with:
-#          python-version: ${{ matrix.python }}
-#
-#      # Note: grep installs as ggrep on macos
-#      - shell: bash
-#        name: Download msys2 python headers (macos)
-#        if: matrix.os == 'macos-latest'
-#        run: |
-#          brew install grep
-#          wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | ggrep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
-#          tar --use-compress-program=unzstd -xvf pkg.tar.zst
-#        working-directory: kpy-library
-#
-#      - shell: bash
-#        name: Download msys2 python headers (ubuntu)
-#        if: matrix.os == 'ubuntu-latest'
-#        run: |
-#          wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | grep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
-#          tar --use-compress-program=unzstd -xvf pkg.tar.zst
-#        working-directory: kpy-library
-#
-#      # Build all
-#      - shell: bash
-#        name: Build sample
-#        run: python kpy-sample/setup.py install --user
-
   build-libraries:
     strategy:
       matrix:
-        python: [ '3.10' ]
-    runs-on: macos-latest
-#    needs: test-sample
+        python:
+          - '3.9'
+          - '3.10'
+          - '3.11'
+          - '3.12'
+        runner-os:
+          - 'windows-latest'
+          - 'ubuntu-latest'
+    #          - 'macos-latest'
+    runs-on: {{ matrix.runner-os }}
     steps:
       # Check out project
       - uses: actions/checkout@v2
@@ -90,20 +47,6 @@ jobs:
         with:
           path: ~/.konan
           key: ${{ runner.os }}-konan
-
-      # Set up python
-      - uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python }}
-
-      # Note: grep installs as ggrep on macos
-      - shell: bash
-        name: Download msys2 python headers
-        run: |
-          brew install grep
-          wget $(curl "https://packages.msys2.org/package/mingw-w64-x86_64-python${{ matrix.python }}?repo=mingw64" | ggrep -Po "(?<=>)https://mirror.msys2.org/.+?.zst") -O pkg.tar.zst
-          tar --use-compress-program=unzstd -xvf pkg.tar.zst
-        working-directory: kpy-library
 
       # Build all
       - name: Build with Gradle

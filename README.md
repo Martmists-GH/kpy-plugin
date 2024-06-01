@@ -24,8 +24,8 @@ Enable the plugin in your build.gradle.kts file:
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "1.7.10"
-    id("com.martmists.kpy.kpy-plugin") version "0.5.3"
+    kotlin("multiplatform") version "2.0.0"
+    id("com.martmists.kpy.kpy-plugin") version "1.0.0"
 }
 
 kotlin {
@@ -40,16 +40,6 @@ kotlin {
         isMingwX64 -> mingwX64("native")
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }
-
-    // Optional: Better memory manager
-    nativeTarget.apply {
-        binaries {
-            staticLib {
-                binaryOptions["memoryModel"] = "experimental"
-                freeCompilerArgs += listOf("-Xgc=cms")
-            }
-        }
-    }
 }
 ```
 
@@ -62,7 +52,7 @@ from setuptools import setup, Extension, find_packages
 from subprocess import Popen, PIPE
 
 osname = system()
-debug = True
+debug = False  # Debug currently has some issues
 dir_name = dirname(abspath(__file__))
 
 if osname == "Linux" or osname == "Darwin":
