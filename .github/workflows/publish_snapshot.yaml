@@ -27,11 +27,7 @@ jobs:
           - '3.10'
           - '3.11'
           - '3.12'
-        runner-os:
-          - 'windows-latest'
-          - 'ubuntu-latest'
-    #          - 'macos-latest'
-    runs-on: {{ matrix.runner-os }}
+    runs-on: 'macos-latest'
     steps:
       # Check out project
       - uses: actions/checkout@v2

@@ -19,60 +19,64 @@ kotlin {
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
 
-    val target = when {
-        hostOs == "Mac OS X" -> macosX64()
-        hostOs == "Linux" -> linuxX64()
-        isMingwX64 -> mingwX64()
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
-    }
+    val targets = listOfNotNull(
+        if (hostOs == "Mac OS X") macosX64() else null,
+        if (!isMingwX64) linuxX64() else null,
+        mingwX64()
+    )
 
 
-    target.apply {
-        val main by compilations.getting {
+    targets.forEach {
+        it.apply {
+            val main by compilations.getting {
 
-        }
-        val python by main.cinterops.creating {
-            definitionFile = project.layout.projectDirectory.file("src/commonMain/cinterop/python.def")
-
-            val downloadSourcesTask = tasks.register("downloadPython${targetName}", DownloadPythonTask::class) {
-                version = pythonVersion
-                platform = when (konanTarget) {
-                    KonanTarget.MINGW_X64 -> DownloadPythonTask.Platform.Windows
-                    KonanTarget.LINUX_X64 -> DownloadPythonTask.Platform.Linux
-                    else -> throw IllegalArgumentException("Unsupported target: $targetName")
-                }
             }
+            val python by main.cinterops.creating {
+                definitionFile = project.layout.projectDirectory.file("src/commonMain/cinterop/python.def")
 
-            val extractSourcesTask = tasks.register("extractPython${targetName.capitalized()}", Exec::class) {
-                dependsOn(downloadSourcesTask)
-
-                val outDir = project.layout.buildDirectory.dir("python-${pythonVersion.str}-${targetName}").get().asFile
-
-                executable = "tar"
-                args(
-                    "-xzf",
-                    downloadSourcesTask.get().tarFile.get().absolutePath,
-                    "-C",
-                    outDir.absolutePath
-                )
-
-                outputs.dir(outDir)
-
-                when (konanTarget) {
-                    KonanTarget.MINGW_X64 -> {
-                        includeDirs(outDir.resolve("python/include"))
-                        linkerOpts("-L${outDir.resolve("python").absolutePath} -lpython3")
+                val downloadSourcesTask = tasks.register("downloadPython${targetName}", DownloadPythonTask::class) {
+                    version = pythonVersion
+                    platform = when (konanTarget) {
+                        KonanTarget.MINGW_X64 -> DownloadPythonTask.Platform.Windows
+                        KonanTarget.LINUX_X64 -> DownloadPythonTask.Platform.Linux
+                        else -> throw IllegalArgumentException("Unsupported target: $targetName")
                     }
-                    KonanTarget.LINUX_X64 -> {
-                        includeDirs(outDir.resolve("python/include/python${pythonVersion.str}"))
-                        linkerOpts("-L${outDir.resolve("python/lib").absolutePath} -lpython3 -lresolv")
-                    }
-                    else -> throw IllegalArgumentException("Unsupported target: $targetName")
                 }
-            }
 
-            tasks.named(interopProcessingTaskName) {
-                dependsOn(extractSourcesTask)
+                val extractSourcesTask = tasks.register("extractPython${targetName.capitalized()}", Exec::class) {
+                    dependsOn(downloadSourcesTask)
+
+                    val outDir =
+                        project.layout.buildDirectory.dir("python-${pythonVersion.str}-${targetName}").get().asFile
+
+                    executable = "tar"
+                    args(
+                        "-xzf",
+                        downloadSourcesTask.get().tarFile.get().absolutePath,
+                        "-C",
+                        outDir.absolutePath
+                    )
+
+                    outputs.dir(outDir)
+
+                    when (konanTarget) {
+                        KonanTarget.MINGW_X64 -> {
+                            includeDirs(outDir.resolve("python/include"))
+                            linkerOpts("-L${outDir.resolve("python").absolutePath} -lpython3")
+                        }
+
+                        KonanTarget.LINUX_X64 -> {
+                            includeDirs(outDir.resolve("python/include/python${pythonVersion.str}"))
+                            linkerOpts("-L${outDir.resolve("python/lib").absolutePath} -lpython3 -lresolv")
+                        }
+
+                        else -> throw IllegalArgumentException("Unsupported target: $targetName")
+                    }
+                }
+
+                tasks.named(interopProcessingTaskName) {
+                    dependsOn(extractSourcesTask)
+                }
             }
         }
     }
