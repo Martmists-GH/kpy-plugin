@@ -4,8 +4,6 @@ The KPy gradle plugin allows you to write Kotlin/Native code and use it from pyt
 
 > Note: Modules built with KPy still require XCode when building on macOS, this is a Kotlin/Native limitation.
 
-For issues and future plans, refer to the [KPy YouTrack](https://youtrack.martmists.com/issues/KPY)
-
 ## Features
 
 ### Implemented
@@ -33,7 +31,7 @@ kotlin {
     val isMingwX64 = hostOs.startsWith("Windows")
     // You can rename the target from `native` to something else, 
     // but make sure to also change setup.py to match this change!
-    // ARM targets are also supported, but I don't know how to test for them
+    // ARM targets are currently unsupported
     val nativeTarget = when {
         hostOs == "Mac OS X" -> macosX64("native")
         hostOs == "Linux" -> linuxX64("native")

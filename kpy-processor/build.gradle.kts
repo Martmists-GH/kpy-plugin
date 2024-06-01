@@ -1,4 +1,3 @@
-import com.martmists.commons.martmistsPublish
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -24,7 +23,7 @@ tasks {
     withType<KotlinCompile> {
         dependsOn("generateBuildConfig")
 
-        kotlinOptions {
+        compilerOptions {
             freeCompilerArgs = listOf("-Xcontext-receivers")
         }
     }
