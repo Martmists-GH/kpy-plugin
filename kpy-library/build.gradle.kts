@@ -139,7 +139,7 @@ if (project.ext.has("mavenToken")) {
 
         publications.withType<MavenPublication> {
             if (System.getenv("DEPLOY_TYPE") == "snapshot") {
-                version = "${System.getenv("GITHUB_SHA")}+$pythonVersion"
+                version = "${System.getenv("GITHUB_SHA")}+${pythonVersion.str}"
             }
         }
     }
