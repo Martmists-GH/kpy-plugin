@@ -27,7 +27,7 @@ jobs:
           - '3.10'
           - '3.11'
           - '3.12'
-    runs-on: 'macos-latest-large'
+    runs-on: 'macos-13'
     steps:
       # Check out project
       - uses: actions/checkout@v2
