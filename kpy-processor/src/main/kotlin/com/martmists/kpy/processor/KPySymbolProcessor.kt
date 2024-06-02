@@ -12,7 +12,7 @@ import com.martmists.kpy.processor.generation.KPyStubGenerator
 @AutoService(SymbolProcessor::class)
 class KPySymbolProcessor(private val projectName: String, private val generateStubs: Boolean, private val codeGenerator: CodeGenerator) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val modules = KPyCodeAnalyzer(projectName, codeGenerator).collect(resolver)
+        val modules = KPyCodeAnalyzer().collect(resolver)
 
         val rootModule = modules.all().filter {
             it.isRoot()

@@ -11,6 +11,7 @@ import python.PyObject_GenericGetAttr
 
 @PyExport
 open class Extra(private val x: Int) {
+    @Suppress("unused")
     @PyHint
     val someProp: FloatArray? = null
 
@@ -32,6 +33,7 @@ open class Extra(private val x: Int) {
 
     }
 
+    @Suppress("FunctionName")
     @PyMagic(PyMagicMethod.TP_GETATTRO)
     internal fun __getattr__(name: String): PyObjectT {
         return PyObject_GenericGetAttr(this.toPython(), name.toPython())

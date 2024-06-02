@@ -3,7 +3,6 @@ package kpy.ext
 import kotlinx.cinterop.*
 import kpy.wrappers.PyObjectT
 import python.*
-import kotlin.native.ref.WeakReference
 
 val CPointer<PyObject>?.kt
     get(): CPointer<KtPyObject> = this!!.reinterpret()

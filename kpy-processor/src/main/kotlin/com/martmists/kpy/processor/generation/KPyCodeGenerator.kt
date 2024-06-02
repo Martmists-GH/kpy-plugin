@@ -7,7 +7,6 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.martmists.kpy.processor.collected.KPyClass
 import com.martmists.kpy.processor.collected.KPyFunction
 import com.martmists.kpy.processor.collected.KPyModule
-import com.martmists.kpy.processor.ext.toSnakeCase
 import java.io.OutputStreamWriter
 
 class KPyCodeGenerator(private val projectName: String, private val generateStubs: Boolean) {
@@ -89,7 +88,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateEntrypoint(module: KPyModule) {
+    private fun generateEntrypoint(module: KPyModule) {
         write("""
             |#include <Python.h>
             |#include "lib${projectName.replace('-', '_')}_api.h"
@@ -104,7 +103,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateKtEntrypoint(module: KPyModule) {
+    private fun generateKtEntrypoint(module: KPyModule) {
         write("""
             |import kotlinx.cinterop.CPointer
             |import python.PyObject
@@ -117,7 +116,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateImports() {
+    private fun generateImports() {
         write("""
             |import kotlinx.cinterop.*
             |
@@ -134,7 +133,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generate(clazz: KPyClass) {
+    private fun generate(clazz: KPyClass) {
         for (function in clazz.functions) {
             generateMethod(clazz, function)
         }
@@ -208,7 +207,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             return ""
         }
 
-        val magic_props = """
+        val magicProps = """
             |${magicAttr("tp_getattro")}
             |${magicAttr("tp_setattro")}
             |${magicAttr("tp_richcompare")}
@@ -244,7 +243,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
             |    ktp_methods = listOf(
             |        ${clazz.functions.joinToString(",\n") { "`${clazz.name}-${it.name}-kpy-def`" }}                
             |    ),
-            |    $magic_props
+            |    $magicProps
             |    ${if (clazz.declaration.annotations.firstOrNull { it.shortName.getShortName() == "PyDictClass" } != null) "ktp_has_dictoffset = true," else ""}
             |)._registerType<${clazz.name}>()
             |
@@ -252,7 +251,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateMethod(clazz: KPyClass, function: KPyFunction) {
+    private fun generateMethod(clazz: KPyClass, function: KPyFunction) {
         val params = function.declaration.parameters
         val nargs = params.size
         val docstring = function.declaration.docString ?: ""
@@ -288,7 +287,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generate(function: KPyFunction) {
+    private fun generate(function: KPyFunction) {
         val params = function.declaration.parameters
         val nargs = params.size
 
@@ -325,7 +324,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
         """.trimMargin())
     }
 
-    fun parseArgs(name: String, function: KSFunctionDeclaration) : String {
+    private fun parseArgs(name: String, function: KSFunctionDeclaration) : String {
         val args = function.parameters.map { it.name!!.asString() }
         val nargs = args.size
 
@@ -338,14 +337,14 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
         """.trimMargin()
     }
 
-    fun params(nullable: List<Boolean>) : String {
+    private fun params(nullable: List<Boolean>) : String {
         return nullable.withIndex().joinToString(", ") {
             "params[${it.index}].value!!.pointed.ptr.toKotlin${if (it.value) "Nullable" else ""}()"
         }
     }
 
     context(OutputStreamWriter)
-    fun generateMagic(clazz: KPyClass, function: KPyFunction) {
+    private fun generateMagic(clazz: KPyClass, function: KPyFunction) {
         when (function.exportName) {
             "tp_iter", "tp_iternext", "am_await", "am_aiter", "am_anext", "nb_negative", "nb_positive", "nb_absolute", "nb_invert", "nb_int", "nb_float", "nb_index" -> generateUnaryfunc(clazz, function)
             "tp_getattro", "nb_add", "nb_inplace_add", "nb_subtract", "nb_inplace_subtract", "nb_multiply", "nb_inplace_multiply", "nb_remainder",
@@ -367,7 +366,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateUnaryfunc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateUnaryfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT ->
             |    try {
@@ -386,7 +385,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateBinaryfunc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateBinaryfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT ->
             |    try {
@@ -405,7 +404,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateTernaryfunc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateTernaryfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT, arg2: PyObjectT ->
             |    try {
@@ -424,7 +423,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateTraverseproc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateTraverseproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: visitproc, arg2: COpaquePointer ->
             |    memScoped {
@@ -438,7 +437,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateRichcmpfunc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateRichcmpfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT, arg2: Int ->
             |    try {
@@ -457,7 +456,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateInquiry(clazz: KPyClass, function: KPyFunction) {
+    private fun generateInquiry(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT ->
             |    memScoped {
@@ -471,7 +470,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateLenfunc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateLenfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT ->
             |    try {
@@ -490,7 +489,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateObjobjargproc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateObjobjargproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT, arg2: PyObjectT ->
             |    try {
@@ -509,7 +508,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateSsizeargfunc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateSsizeargfunc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: Py_ssize_t ->
             |    try {
@@ -528,7 +527,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateSsizeobjargproc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateSsizeobjargproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: Py_ssize_t ->
             |    try {
@@ -547,7 +546,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateObjobjproc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateObjobjproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, arg: PyObjectT ->
             |    try {
@@ -566,7 +565,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateGetbufferproc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateGetbufferproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, view: Py_buffer, flags: Int ->
             |    memScoped {
@@ -580,7 +579,7 @@ class KPyCodeGenerator(private val projectName: String, private val generateStub
     }
 
     context(OutputStreamWriter)
-    fun generateReleasebufferproc(clazz: KPyClass, function: KPyFunction) {
+    private fun generateReleasebufferproc(clazz: KPyClass, function: KPyFunction) {
         write("""
             |private val `${clazz.name}-${function.name}-kpy-magic-fun` = staticCFunction { self: PyObjectT, view: Py_buffer ->
             |    memScoped {

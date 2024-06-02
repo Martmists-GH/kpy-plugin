@@ -1,6 +1,7 @@
 package kpy.annotations
 
 // See: https://docs.python.org/3/c-api/typeobj.html
+@Suppress("unused")
 enum class PyMagicMethod {
     // tp
     TP_GETATTRO,

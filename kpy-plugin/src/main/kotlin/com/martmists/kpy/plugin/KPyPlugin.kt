@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
+@Suppress("unused")
 open class KPyPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {

@@ -29,6 +29,7 @@ class MyClass {
         println("Object: ${PyObject_Str(obj)}")
     }
 
+    @Suppress("unused")
     fun hidden() {
         println("This is hidden!")
     }

@@ -8,6 +8,7 @@ import kpy.wrappers.PyMethodKwargsT
 import kpy.wrappers.PyMethodT
 import python.*
 
+@Suppress("unused")
 inline fun FuncPtr<PyMethodT>.pydef(
     name: String,
     doc: String,

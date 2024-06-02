@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package kpy.internals
 
 import kotlinx.cinterop.CPointer

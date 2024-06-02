@@ -1,3 +1,5 @@
+@file:Suppress("DuplicatedCode")
+
 package com.martmists.kpy.processor.generation
 
 import com.google.devtools.ksp.processing.CodeGenerator
@@ -94,7 +96,7 @@ class KPyStubGenerator {
     }
 
     context(OutputStreamWriter)
-    fun generateModule(module: KPyModule) {
+    private fun generateModule(module: KPyModule) {
         for (child in module.children) {
             write("import ${child.name} as ${child.key}\n")
         }

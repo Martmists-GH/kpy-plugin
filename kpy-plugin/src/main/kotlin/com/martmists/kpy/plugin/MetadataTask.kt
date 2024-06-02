@@ -17,7 +17,7 @@ open class MetadataTask : DefaultTask() {
         |project_name = "${project.name}"
         |module_name = "${ext.moduleName.get() ?: project.name}"
         |project_version = "${project.version}"
-        |build_dir = "${project.buildDir.absolutePath}"
+        |build_dir = "${project.layout.buildDirectory.get().asFile.absolutePath}"
         |target = "$targetName"
         |has_stubs = ${if (ext.generateStubs.get()) "True" else "False"}
         ${ext.props.get().map { (key, value) -> "|$key = $value" }.joinToString { "\n" }}

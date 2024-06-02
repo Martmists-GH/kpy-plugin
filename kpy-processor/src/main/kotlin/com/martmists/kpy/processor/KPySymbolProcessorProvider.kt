@@ -5,6 +5,7 @@ import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.martmists.kpy.processor.ext.toSnakeCase
 
+@Suppress("unused")
 @AutoService(SymbolProcessorProvider::class)
 class KPySymbolProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): KPySymbolProcessor {

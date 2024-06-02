@@ -20,6 +20,7 @@ import org.gradle.kotlin.dsl.*
 import java.io.File
 
 abstract class DownloadPythonTask : DefaultTask() {
+    @Suppress("EnumEntryName")
     enum class Version(val str: String) {
         Python3_9("3.9"),
         Python3_10("3.10"),

@@ -27,7 +27,7 @@ operator fun PyObjectT.rem(other: PyObjectT) = PyNumber_Remainder(this, other)
 operator fun PyObjectT.rem(other: Any) = this.rem(other.toPython())
 
 operator fun PyObjectT.get(key: PyObjectT) = PyObject_GetItem(this, key)
-operator fun PyObjectT.get(key: Any) = this.get(key.toPython())
+operator fun PyObjectT.get(key: Any) = this[key.toPython()]
 
 operator fun PyObjectT.set(key: PyObjectT, value: PyObjectT) = PyObject_SetItem(this, key, value)
 operator fun PyObjectT.set(key: PyObjectT, value: Any) = this.set(key, value.toPython())

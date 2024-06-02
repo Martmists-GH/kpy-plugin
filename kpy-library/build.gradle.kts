@@ -56,8 +56,7 @@ kotlin {
                 val extractSourcesTask = tasks.register("extractPython${targetName.capitalized()}", Exec::class) {
                     dependsOn(downloadSourcesTask)
 
-                    val outDir =
-                        project.layout.buildDirectory.dir("python-${pythonVersion.str}-${targetName}").get().asFile
+                    val outDir = project.layout.buildDirectory.dir("python-${pythonVersion.str}-${targetName}").get().asFile
 
                     executable = "tar"
                     args(

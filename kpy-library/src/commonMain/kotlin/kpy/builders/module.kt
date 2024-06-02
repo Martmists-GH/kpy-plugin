@@ -6,6 +6,7 @@ import kotlinx.cinterop.nativeHeap
 import kpy.internals.PyModuleDef_HEAD_INIT
 import python.*
 
+@Suppress("LocalVariableName")
 fun makeModule(
     km_name: String,
     km_methods: List<CValue<PyMethodDef>>? = null,

@@ -1,5 +1,6 @@
 package com.martmists.kpy.plugin
 
+@Suppress("unused")
 enum class PythonVersion(val value: String) {
     Py39("3.9"),
     Py310("3.10"),

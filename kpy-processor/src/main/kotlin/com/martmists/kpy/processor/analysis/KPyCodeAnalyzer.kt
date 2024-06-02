@@ -1,14 +1,13 @@
 package com.martmists.kpy.processor.analysis
 
 import com.google.devtools.ksp.getAllSuperTypes
-import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.*
 import com.martmists.kpy.processor.collected.KPyClass
 import com.martmists.kpy.processor.collected.KPyFunction
 import com.martmists.kpy.processor.collected.KPyProperty
 
-class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator: CodeGenerator) {
+class KPyCodeAnalyzer {
     fun collect(resolver: Resolver) : KPyModuleCache {
         val modules = KPyModuleCache()
 
@@ -52,28 +51,28 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
 
     private fun KSClassDeclaration.asKPy() : KPyClass {
         val funcs = getAllFunctions().filter {
-            it.parentDeclaration == this && it.annotations.any {
-                it.shortName.asString() == "PyExport"
+            it.parentDeclaration == this && it.annotations.any { ann ->
+                ann.shortName.asString() == "PyExport"
             }
         }
 
         val magic = getAllFunctions().filter {
-            it.parentDeclaration == this && it.annotations.any {
-                it.shortName.asString() == "PyMagic"
+            it.parentDeclaration == this && it.annotations.any { ann ->
+                ann.shortName.asString() == "PyMagic"
             }
         }
 
         val props = getAllProperties().filter {
-            it.parentDeclaration == this && it.annotations.any {
-                it.shortName.asString() == "PyHint"
+            it.parentDeclaration == this && it.annotations.any { ann ->
+                ann.shortName.asString() == "PyHint"
             }
         }
 
-        val parent = this.getAllSuperTypes().firstOrNull() {
+        val parent = this.getAllSuperTypes().firstOrNull {
             val decl = it.declaration
             decl is KSClassDeclaration &&
-                    decl.classKind == ClassKind.CLASS && decl.annotations.any {
-                it.shortName.asString() == "PyExport"
+                    decl.classKind == ClassKind.CLASS && decl.annotations.any { ann ->
+                ann.shortName.asString() == "PyExport"
             }
         }?.declaration as? KSClassDeclaration
 
@@ -136,11 +135,12 @@ class KPyCodeAnalyzer(private val projectName: String, private val codeGenerator
         val byName = mutableMapOf<String, T>()
         val byIndex = mutableMapOf<Int, T>()
 
-        arguments.forEachIndexed { index, argument ->
+        @Suppress("UNCHECKED_CAST")
+        arguments.forEachIndexed { idx, argument ->
             if (argument.name != null) {
                 byName[argument.name!!.asString()] = argument.value as T
             } else {
-                byIndex[index] = argument.value as T
+                byIndex[idx] = argument.value as T
             }
         }
 

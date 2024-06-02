@@ -23,18 +23,20 @@ Enable the plugin in your build.gradle.kts file:
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.0.0"
-    id("com.martmists.kpy.kpy-plugin") version "1.0.0"
+    id("com.martmists.kpy.kpy-plugin") version "1.0.1"
 }
 
 kotlin {
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
+    val isArm64 = System.getProperty("os.arch") == "aarch64"
     // You can rename the target from `native` to something else, 
     // but make sure to also change setup.py to match this change!
-    // ARM targets are currently unsupported
     val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
+        hostOs == "Mac OS X" && !isArm64 -> macosX64("native")
+        hostOs == "Linux" && !isArm64 -> linuxX64("native")
+        hostOs == "Mac OS X" && isArm64 -> macosArm64("native")
+        hostOs == "Linux" && isArm64 -> linuxArm64("native")
         isMingwX64 -> mingwX64("native")
         else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
     }

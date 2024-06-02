@@ -11,6 +11,7 @@ import python.*
 
 val Py_TPFLAGS_DEFAULT = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION.toULong() or Py_TPFLAGS_HAVE_VERSION_TAG.toULong()
 
+@Suppress("unused", "LocalVariableName")
 inline fun <reified T> makePyType(
     ktp_dealloc: destructor? = null,
     ktp_vectorcall_offset: Py_ssize_t = 0,
@@ -86,6 +87,7 @@ inline fun <reified T> makePyType(
     ktp_has_dictoffset
 )
 
+@Suppress("RemoveRedundantCallsOfConversionMethods", "LocalVariableName")
 fun makePyType(
     name: String,
     ktp_dealloc: destructor? = null,

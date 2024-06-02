@@ -5,4 +5,5 @@ package kpy.annotations
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.SOURCE)
+@Suppress("unused")
 annotation class PyDictClass

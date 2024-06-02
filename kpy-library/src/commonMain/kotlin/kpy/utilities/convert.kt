@@ -15,6 +15,7 @@ internal val typeMap = mutableMapOf<KType, PyTypeObject>()
 internal val instanceMap = mutableMapOf<Any, PyObjectT>()
 
 // Avoid using these
+@Suppress("FunctionName")
 inline fun <reified K> PyTypeObject._registerType() : PyTypeObject {
     typeMap[typeOf<K>()] = this
     return this
@@ -29,7 +30,7 @@ fun Any.forget() {
 inline fun <reified R : Any> PyObjectT.toKotlin() : R = toKotlin(typeOf<R>())
 inline fun <reified R : Any> PyObjectT.toKotlinNullable() : R? = toKotlinNullable(typeOf<R>())
 
-@Suppress("IMPLICIT_CAST_TO_ANY", "UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "DuplicatedCode")
 fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
     val clazz = type?.classifier
 
@@ -178,14 +179,12 @@ fun <R : Any> PyObjectT.toKotlin(type: KType?) : R {
     } as R
 }
 
-@Suppress("IMPLICIT_CAST_TO_ANY", "UNCHECKED_CAST")
 fun <R : Any> PyObjectT.toKotlinNullable(type: KType?) : R? {
-    return if (type?.isMarkedNullable == true && this == Py_None) null else toKotlin(type)
+    return if (type?.isMarkedNullable == true && this === Py_None) null else toKotlin(type)
 }
 
 inline fun <reified T> T.toPython() = toPython(typeOf<T>())
 
-@Suppress("UNNECESSARY_NOT_NULL_ASSERTION")  // False positive
 fun <T> T.toPython(type: KType) : PyObjectT {
     return when (this) {
         null, is Unit -> Py_None.incref()
@@ -259,6 +258,7 @@ fun <T> T.toPython(type: KType) : PyObjectT {
             tuple
         }
         is CPointer<*> -> {
+            @Suppress("UNCHECKED_CAST")
             this as PyObjectT
         }
         else -> {

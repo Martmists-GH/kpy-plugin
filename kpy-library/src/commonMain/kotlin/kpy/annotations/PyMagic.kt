@@ -5,4 +5,5 @@ package kpy.annotations
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.SOURCE)
+@Suppress("unused")
 annotation class PyMagic(val key: PyMagicMethod)

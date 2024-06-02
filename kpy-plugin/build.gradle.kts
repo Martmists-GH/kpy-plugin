@@ -8,7 +8,7 @@ plugins {
     id("com.github.gmazzo.buildconfig")
 }
 
-buildDir = file("../build/kpy-plugin")
+layout.buildDirectory = rootProject.layout.buildDirectory.dir("kpy-plugin")
 
 repositories {
     mavenCentral()
