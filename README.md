@@ -4,6 +4,8 @@ The KPy gradle plugin allows you to write Kotlin/Native code and use it from pyt
 
 > Note: Modules built with KPy still require XCode when building on macOS, this is a Kotlin/Native limitation.
 
+A huge thank you to the [indygreg/python-build-standalone](https://github.com/indygreg/python-build-standalone/) project for providing prebuilt python binaries to build against. This project would be impossible to maintain without it.
+
 ## Features
 
 ### Implemented
