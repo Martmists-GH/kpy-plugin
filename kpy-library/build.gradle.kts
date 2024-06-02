@@ -21,8 +21,10 @@ kotlin {
 
     val targets = listOfNotNull(
         if (hostOs == "Mac OS X") macosX64() else null,
+        if (hostOs == "Mac OS X") macosArm64() else null,
         if (!isMingwX64) linuxX64() else null,
-        mingwX64()
+        if (!isMingwX64) linuxArm64() else null,
+        mingwX64(),
     )
 
 
@@ -36,10 +38,17 @@ kotlin {
 
                 val downloadSourcesTask = tasks.register("downloadPython${targetName}", DownloadPythonTask::class) {
                     version = pythonVersion
+
+                    architecture = when (konanTarget) {
+                        KonanTarget.MINGW_X64, KonanTarget.LINUX_X64, KonanTarget.MACOS_X64 -> DownloadPythonTask.Architecture.X86_64
+                        KonanTarget.LINUX_ARM64, KonanTarget.MACOS_ARM64 -> DownloadPythonTask.Architecture.ARM64
+                        else -> throw IllegalArgumentException("Unsupported target: $targetName")
+                    }
+
                     platform = when (konanTarget) {
                         KonanTarget.MINGW_X64 -> DownloadPythonTask.Platform.Windows
-                        KonanTarget.LINUX_X64 -> DownloadPythonTask.Platform.Linux
-                        KonanTarget.MACOS_X64 -> DownloadPythonTask.Platform.MacOS
+                        KonanTarget.LINUX_X64, KonanTarget.LINUX_ARM64 -> DownloadPythonTask.Platform.Linux
+                        KonanTarget.MACOS_X64, KonanTarget.MACOS_ARM64 -> DownloadPythonTask.Platform.MacOS
                         else -> throw IllegalArgumentException("Unsupported target: $targetName")
                     }
                 }
@@ -66,12 +75,12 @@ kotlin {
                             linkerOpts("-L${outDir.resolve("python").absolutePath} -lpython3")
                         }
 
-                        KonanTarget.LINUX_X64 -> {
+                        KonanTarget.LINUX_X64, KonanTarget.LINUX_ARM64 -> {
                             includeDirs(outDir.resolve("python/include/python${pythonVersion.str}"))
                             linkerOpts("-L${outDir.resolve("python/lib").absolutePath} -lpython3")
                         }
 
-                        KonanTarget.MACOS_X64 -> {
+                        KonanTarget.MACOS_X64, KonanTarget.MACOS_ARM64 -> {
                             includeDirs(outDir.resolve("python/include/python${pythonVersion.str}"))
                             linkerOpts("-L${outDir.resolve("python/lib").absolutePath} -lpython3")
                         }

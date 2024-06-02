@@ -33,18 +33,26 @@ abstract class DownloadPythonTask : DefaultTask() {
         MacOS,
     }
 
+    enum class Architecture {
+        X86_64,
+        ARM64,
+    }
+
     @get:Input
     abstract val version: Property<Version>
 
     @get:Input
     abstract val platform: Property<Platform>
 
+    @get:Input
+    abstract val architecture: Property<Architecture>
+
     @get:OutputFile
     abstract val tarFile: Property<File>
 
     init {
         tarFile.convention(Providers.changing {
-            project.layout.buildDirectory.file("python-${version.get().str}-${platform.get()}.tar.gz").get().asFile
+            project.layout.buildDirectory.file("python-${version.get().str}-${platform.get()}-${architecture.get()}.tar.gz").get().asFile
         })
     }
 
@@ -60,12 +68,18 @@ abstract class DownloadPythonTask : DefaultTask() {
             Platform.MacOS -> "apple-darwin"
             else -> throw IllegalArgumentException("Unsupported platform: $platform")
         }
+        val arch = when (architecture.get()) {
+            Architecture.X86_64 -> "x86_64"
+            Architecture.ARM64 -> "aarch64"
+            else -> throw IllegalArgumentException("Unsupported architecture: ${architecture.get()}")
+        }
+
         val tmpFile by tarFile
         tmpFile.parentFile.mkdirs()
 
         val url = data["assets"]!!.jsonArray.map { obj ->
             obj.jsonObject["browser_download_url"]!!.jsonPrimitive.content
-        }.first { it.contains("/cpython-${version.str}") && it.endsWith("x86_64-$hostOs-install_only.tar.gz") }
+        }.first { it.contains("/cpython-${version.str}") && it.endsWith("$arch-$hostOs-install_only.tar.gz") }
 
         client.get(url).bodyAsChannel().also { channel ->
             tmpFile.writeChannel().use {
